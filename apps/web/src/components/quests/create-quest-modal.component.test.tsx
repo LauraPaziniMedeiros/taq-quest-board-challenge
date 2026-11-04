@@ -11,6 +11,13 @@ describe('CreateQuestModal', () => {
     expect(screen.getByLabelText('Descrição')).toBeRequired();
   });
 
+  it('defaults the difficulty to normal and only offers the valid options', () => {
+    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={vi.fn()} isLoading={false} />);
+
+    expect(screen.getByLabelText('Dificuldade')).toHaveValue('normal');
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['Fácil', 'Normal', 'Difícil']);
+  });
+
   it('explains which fields are missing instead of submitting', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
@@ -54,9 +61,31 @@ describe('CreateQuestModal', () => {
     await user.type(screen.getByLabelText('Descrição'), '  Derrote a besta  ');
     await user.click(screen.getByRole('button', { name: 'Publicar missão' }));
 
-    expect(onSubmit).toHaveBeenCalledWith({ title: 'Enfrentar o dragão', description: 'Derrote a besta' });
+    expect(onSubmit).toHaveBeenCalledWith({
+      title: 'Enfrentar o dragão',
+      description: 'Derrote a besta',
+      difficulty: 'normal',
+    });
     expect(screen.getByLabelText('Título da missão')).toHaveValue('');
     expect(screen.getByLabelText('Descrição')).toHaveValue('');
+  });
+
+  it('submits the selected difficulty and resets it to normal on success', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(true);
+    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+
+    await user.type(screen.getByLabelText('Título da missão'), 'Enfrentar o dragão');
+    await user.type(screen.getByLabelText('Descrição'), 'Derrote a besta');
+    await user.selectOptions(screen.getByLabelText('Dificuldade'), 'high');
+    await user.click(screen.getByRole('button', { name: 'Publicar missão' }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      title: 'Enfrentar o dragão',
+      description: 'Derrote a besta',
+      difficulty: 'high',
+    });
+    expect(screen.getByLabelText('Dificuldade')).toHaveValue('normal');
   });
 
   it('keeps the form filled when the submission fails', async () => {

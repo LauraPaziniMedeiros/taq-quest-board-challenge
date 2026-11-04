@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, mock, spyOn } fro
 import { DatabaseIdGenerator, dbClient } from '@repo/db';
 import { clearDatabase } from '@repo/db/test';
 import { API_PREFIX } from '#api/rest.config.js';
-import type { Quest, QuestInput } from '#domain/model/quests.model.js';
+import type { Quest, QuestDifficulty, QuestInput } from '#domain/model/quests.model.js';
 import { checkErrors } from '#test/checkers/checker.test.js';
 import { checkQuest } from '#test/checkers/quests.checker.test.js';
 import { ValidationError } from '#test/checkers/validation.error.test.js';
@@ -13,7 +13,7 @@ describe('POST /quests', () => {
   const questId = 'q_123';
   const invalidDataMessage = 'Os dados enviados são inválidos. Por favor, reveja as informações.';
 
-  let requestMaker: RequestMaker<Quest, QuestInput>;
+  let requestMaker: RequestMaker<Quest, Partial<QuestInput>>;
 
   beforeAll(() => {
     requestMaker = new RequestMaker();
@@ -47,8 +47,28 @@ describe('POST /quests', () => {
     });
   });
 
-  it('should ignore a difficulty sent by the client', async () => {
-    const body = { title: 'Urgent: production checkout is down', description: 'desc', difficulty: 'high' } as any;
+  const validDifficulties: Array<[QuestDifficulty, number]> = [
+    ['easy', 10],
+    ['normal', 25],
+    ['high', 50],
+  ];
+
+  it.each(validDifficulties)('should create a %s quest with %d XP', async (difficulty, xpReward) => {
+    const body = { title: 'Urgent: production checkout is down', description: 'desc', difficulty };
+    const response = await requestMaker.post({ endpoint, body });
+
+    const questDb = (await dbClient.query.questTable.findFirst({ where: { id: questId } }))!;
+    checkQuest(response.data, questDb);
+    expect(questDb.difficulty).toBe(difficulty);
+    expect(response.data.xpReward).toBe(xpReward);
+  });
+
+  it.each([
+    ['an unknown value', 'legendary'],
+    ['a number', 42],
+    ['null', null],
+  ])('should default to normal when the difficulty is %s', async (_label, difficulty) => {
+    const body = { title: 'Invalid difficulty', description: 'desc', difficulty } as any;
     const response = await requestMaker.post({ endpoint, body });
 
     const questDb = (await dbClient.query.questTable.findFirst({ where: { id: questId } }))!;
