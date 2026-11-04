@@ -1,15 +1,18 @@
 import { Button } from '@atomic/atm.button';
+import { Select } from '@atomic/atm.select';
 import { TextAreaInput, TextInput } from '@atomic/atm.text-input';
 import { InputLabel } from '@atomic/atm.typography';
 import { Col, Grid } from '@atomic/obj.grid';
 import { Modal } from '@atomic/obj.modal';
-import type { QuestInput } from '@domain/model/quest.model';
+import { QUEST_DIFFICULTIES, type QuestDifficulty, type QuestInput } from '@domain/model/quest.model';
 import { type FormEvent, useRef, useState } from 'react';
+import { QUEST_DIFFICULTY_LABEL } from './quest-presentation';
 
 const TITLE_MAX_LENGTH = 200;
 const DESCRIPTION_MAX_LENGTH = 5000;
 const TITLE_REQUIRED_MESSAGE = 'Informe o título da missão.';
 const DESCRIPTION_REQUIRED_MESSAGE = 'Informe a descrição da missão.';
+const DIFFICULTY_OPTIONS = QUEST_DIFFICULTIES.map(value => ({ value, label: QUEST_DIFFICULTY_LABEL[value] }));
 
 interface CreateQuestModalProps {
   opened: boolean;
@@ -22,6 +25,7 @@ interface CreateQuestModalProps {
 export function CreateQuestModal(props: CreateQuestModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [difficulty, setDifficulty] = useState<QuestDifficulty>('normal');
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -45,10 +49,11 @@ export function CreateQuestModal(props: CreateQuestModalProps) {
       return;
     }
 
-    const succeeded = await props.onSubmit({ title: title.trim(), description: description.trim() });
+    const succeeded = await props.onSubmit({ title: title.trim(), description: description.trim(), difficulty });
     if (succeeded) {
       setTitle('');
       setDescription('');
+      setDifficulty('normal');
       setSubmitAttempted(false);
     }
   };
@@ -104,6 +109,15 @@ export function CreateQuestModal(props: CreateQuestModalProps) {
                 {descriptionError}
               </p>
             )}
+          </Col>
+          <Col sm={12} className="mb-md">
+            <InputLabel htmlFor="quest-difficulty">Dificuldade</InputLabel>
+            <Select
+              id="quest-difficulty"
+              value={difficulty}
+              onChange={event => setDifficulty(event.target.value as QuestDifficulty)}
+              options={DIFFICULTY_OPTIONS}
+            />
           </Col>
           <Col sm={12}>
             <Button type="submit" variant="cta" expanded loading={props.isLoading}>

@@ -1,5 +1,6 @@
 export type QuestStatus = 'open' | 'in_progress' | 'resolved';
-export type QuestDifficulty = 'easy' | 'normal' | 'high';
+export const QUEST_DIFFICULTIES = ['easy', 'normal', 'high'] as const;
+export type QuestDifficulty = (typeof QUEST_DIFFICULTIES)[number];
 
 export interface Quest {
   id: string;
@@ -14,6 +15,7 @@ export interface Quest {
 export interface QuestInput {
   title: string;
   description: string;
+  difficulty: QuestDifficulty;
 }
 
 export interface PageInfo {

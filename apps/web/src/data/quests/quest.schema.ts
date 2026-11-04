@@ -1,8 +1,8 @@
-import type { Paginated, PageInfo, Quest } from '@domain/model/quest.model';
+import { QUEST_DIFFICULTIES, type Paginated, type PageInfo, type Quest } from '@domain/model/quest.model';
 import { type ZodType, z } from 'zod';
 
 export const questStatusSchema = z.enum(['open', 'in_progress', 'resolved']);
-export const questDifficultySchema = z.enum(['easy', 'normal', 'high']);
+export const questDifficultySchema = z.enum(QUEST_DIFFICULTIES);
 
 export const questSchema = z.object({
   id: z.string(),
