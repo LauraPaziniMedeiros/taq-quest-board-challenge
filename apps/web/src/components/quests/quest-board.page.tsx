@@ -112,6 +112,19 @@ const QuestBoardPage = () => {
     setEditingQuest(quest);
   };
 
+  const handleDuplicateQuest = async (quest: Quest) => {
+    const created = await createQuest({
+      title: quest.title,
+      description: quest.description,
+      difficulty: quest.difficulty,
+    });
+
+    if (created) {
+      refetch();
+      setEditingQuest(created);
+    }
+  };
+
   const handleRemoveQuest = async (quest: Quest) => {
     const deleted = await deleteQuest(quest.id);
     console.log('deleted', deleted);
@@ -172,6 +185,7 @@ const QuestBoardPage = () => {
                 onEdit={handleEditQuest}
                 onMoveQuest={handleMoveQuest}
                 onRemove={handleRemoveQuest}
+                onDuplicate={handleDuplicateQuest}
               />
             ))}
           </div>

@@ -14,6 +14,7 @@ interface QuestColumnProps {
   onEdit: (quest: Quest) => void;
   onMoveQuest: (quest: Quest, status: QuestStatus) => void;
   onRemove: (quest: Quest) => void;
+  onDuplicate: (quest: Quest) => void;
 }
 
 export const QuestColumn = ({
@@ -25,6 +26,7 @@ export const QuestColumn = ({
   onEdit,
   onMoveQuest,
   onRemove,
+  onDuplicate,
 }: QuestColumnProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -105,6 +107,7 @@ export const QuestColumn = ({
             onAdvance={onAdvance}
             onEdit={onEdit}
             onRemove={onRemove}
+            onDuplicate={onDuplicate}
           />
         ))}
       </div>

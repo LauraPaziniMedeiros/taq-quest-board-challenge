@@ -10,10 +10,11 @@ interface QuestCardProps {
   onAdvance: (quest: Quest) => void;
   onEdit: (quest: Quest) => void;
   onRemove: (quest: Quest) => void;
+  onDuplicate: (quest: Quest) => void;
 }
 
 export function QuestCard(props: QuestCardProps) {
-  const { quest, columnStatus, onAdvance, onEdit, onRemove } = props;
+  const { quest, columnStatus, onAdvance, onEdit, onRemove, onDuplicate } = props;
   const advanceLabel = ADVANCE_LABEL[columnStatus];
   const classes = style({ columnStatus });
   const [isDragging, setIsDragging] = useState(false);
@@ -46,6 +47,9 @@ export function QuestCard(props: QuestCardProps) {
       <div className="flex gap-sm">
         <button type="button" onClick={() => onEdit(quest)} className={classes.editButton()}>
           Editar
+        </button>
+        <button type="button" onClick={() => onDuplicate(quest)} className={classes.editButton()}>
+          Duplicar
         </button>
         <button
           type="button"
