@@ -162,6 +162,36 @@ describe('QuestBoardPage', () => {
     confirmSpy.mockRestore();
   });
 
+  it('duplicates a quest with only its editable fields', async () => {
+    const user = userEvent.setup();
+    createQuest.mockResolvedValue({ ...OPEN_QUEST, id: 'q_2' });
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Duplicar' }));
+
+    expect(createQuest).toHaveBeenCalledWith({
+      title: OPEN_QUEST.title,
+      description: OPEN_QUEST.description,
+      difficulty: OPEN_QUEST.difficulty,
+    });
+    expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ status: expect.anything() }));
+    expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ id: expect.anything() }));
+    expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ xpReward: expect.anything() }));
+  });
+
+  it('opens the duplicate for editing after creating it', async () => {
+    const user = userEvent.setup();
+    createQuest.mockResolvedValue({ ...OPEN_QUEST, id: 'q_2', title: 'Cópia da missão' });
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Duplicar' }));
+
+    expect(screen.getByText('Editar missão')).toBeInTheDocument();
+    expect(screen.getByLabelText('Título da missão')).toHaveValue('Cópia da missão');
+  });
+
   it('creates a quest and refetches the board on success', async () => {
     const user = userEvent.setup();
     createQuest.mockResolvedValue({ ...OPEN_QUEST, id: 'q_2', title: 'Nova missão criada' });
