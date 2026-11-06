@@ -78,7 +78,7 @@ router (a single screen, rendered directly from `App.tsx`).
 ## Quest board feature
 
 A 3-column kanban board (Pergaminhos Novos / Em Jornada / Lendas Concluídas), one column per real quest
-status, with a modal to create new quests. Moving a quest between columns is
-client-side only — the backend doesn't expose `PATCH /quests/:id` yet (see the root [`README.md`](README.md)
-TODOs). Difficulty is chosen when creating a quest (`easy`, `normal` or `high`, defaulting to `normal`);
-the XP reward is read-only, derived by the backend from the chosen difficulty.
+status, with a modal to create new quests. Moving a quest between columns persists its status through
+`PATCH /quests/:id`, and quests can be edited from the board through the same endpoint. Difficulty is
+chosen when creating a quest (`easy`, `normal` or `high`, defaulting to `normal`); the XP reward is
+read-only, derived by the backend from the chosen difficulty.
