@@ -3,6 +3,8 @@ import type { DragEvent } from 'react';
 import { useState } from 'react';
 import { QuestCard } from './quest-card.component';
 
+const QUEST_STATUS_ORDER: QuestStatus[] = ['open', 'in_progress', 'resolved'];
+
 interface QuestColumnProps {
   status: QuestStatus;
   title: string;
@@ -45,8 +47,12 @@ export const QuestColumn = ({ status, title, subtitle, quests, onAdvance, onEdit
       quest = quests.find(item => item.id === questId) ?? null;
     }
 
-    if (quest && quest.status !== status) {
-      onMoveQuest(quest, status);
+    if (quest) {
+      const currentIndex = QUEST_STATUS_ORDER.indexOf(quest.status);
+      const targetIndex = QUEST_STATUS_ORDER.indexOf(status);
+      if (targetIndex > currentIndex) {
+        onMoveQuest(quest, status);
+      }
     }
   };
 

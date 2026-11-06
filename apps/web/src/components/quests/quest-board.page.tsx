@@ -56,6 +56,11 @@ const QuestBoardPage = () => {
         return;
       }
 
+      const statusOrder: QuestStatus[] = ['open', 'in_progress', 'resolved'];
+      if (statusOrder.indexOf(newStatus) <= statusOrder.indexOf(quest.status)) {
+        return;
+      }
+
       const previousQuest = quest;
       const optimisticQuest = { ...quest, status: newStatus };
       updateQuestInList(optimisticQuest);
