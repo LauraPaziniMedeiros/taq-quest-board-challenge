@@ -53,6 +53,7 @@ describe('QuestPlayerHud', () => {
 
     expect(screen.getByText('0 / 100 XP')).toBeInTheDocument();
     expect(screen.getByText(/N\u00edvel 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Recruta/, { selector: '.font-secondary' })).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
   });
 
@@ -69,5 +70,28 @@ describe('QuestPlayerHud', () => {
 
     expect(screen.getByText('0 / 100 XP')).toBeInTheDocument();
     expect(screen.getByText(/N\u00edvel 2/)).toBeInTheDocument();
+  });
+});
+
+describe('QuestPlayerHud level titles', () => {
+  it('shows a different title for each level', () => {
+    const { unmount: unmountFirst } = render(<QuestPlayerHud totalXp={0} />);
+    expect(screen.getByText(/Recruta/, { selector: '.font-secondary' })).toBeInTheDocument();
+    unmountFirst();
+
+    const { unmount: unmountSecond } = render(<QuestPlayerHud totalXp={100} />);
+    expect(screen.getByText(/Aventureiro/, { selector: '.font-secondary' })).toBeInTheDocument();
+    unmountSecond();
+
+    render(<QuestPlayerHud totalXp={200} />);
+    expect(screen.getByText(/Herói/, { selector: '.font-secondary' })).toBeInTheDocument();
+  });
+
+  it('celebrates when reaching a new level', () => {
+    const { rerender } = render(<QuestPlayerHud totalXp={0} />);
+    rerender(<QuestPlayerHud totalXp={100} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(/Parab/);
+    expect(screen.getByRole('status')).toHaveTextContent(/Aventureiro/);
   });
 });
