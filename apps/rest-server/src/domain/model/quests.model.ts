@@ -21,3 +21,10 @@ export interface QuestInput {
   description: string;
   difficulty: QuestDifficulty;
 }
+
+export interface QuestUpdateInput {
+  title?: string;
+  description?: string;
+  difficulty?: QuestDifficulty;
+  status?: QuestStatus;
+}

@@ -1,7 +1,13 @@
 import type { Paginated } from '@repo/core/pagination';
 import { type ZodType, z } from 'zod';
 import { PageRequest, PaginatedResponse } from '#api/common/common.payload.js';
-import { QUEST_DIFFICULTIES, QUEST_STATUSES, type Quest, type QuestInput } from '#domain/model/quests.model.js';
+import {
+  QUEST_DIFFICULTIES,
+  QUEST_STATUSES,
+  type Quest,
+  type QuestInput,
+  type QuestUpdateInput,
+} from '#domain/model/quests.model.js';
 import type { ListQuestsInput } from '#domain/quests/list-quests.use-case.js';
 
 export const QuestStatusEnum = z.enum(QUEST_STATUSES);
@@ -24,6 +30,13 @@ export const QuestRequest = z.object({
   description: z.string().trim().min(1).max(5000),
   difficulty: QuestDifficultyEnum.default('normal').catch('normal'),
 }) satisfies ZodType<QuestInput>;
+
+export const QuestUpdateRequest = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  description: z.string().trim().min(1).max(5000).optional(),
+  difficulty: QuestDifficultyEnum.optional(),
+  status: QuestStatusEnum.optional(),
+}) satisfies ZodType<QuestUpdateInput>;
 
 export const QuestParams = z.object({
   id: z.string().startsWith('q_'),

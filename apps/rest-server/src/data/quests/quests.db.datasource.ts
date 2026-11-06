@@ -9,6 +9,7 @@ import {
   type QuestData,
   type QuestInput,
   type QuestStatus,
+  type QuestUpdateInput,
 } from '#domain/model/quests.model.js';
 
 const EXTERNAL_ID_PREFIX = 'q_';
@@ -32,6 +33,20 @@ export const QuestsDbDatasource = {
 
   async findOneById(id: string): Promise<QuestData | null> {
     const quest = await dbClient.query.questTable.findFirst({ where: { id, deletedAt: { isNull: true } } });
+    return quest ? toQuestData(quest) : null;
+  },
+
+  async update(id: string, input: QuestUpdateInput): Promise<QuestData | null> {
+    if (Object.keys(input).length === 0) {
+      return this.findOneById(id);
+    }
+
+    const [quest] = await dbClient
+      .update(questTable)
+      .set({ ...input, updatedAt: new Date() })
+      .where(and(eq(questTable.id, id), isNull(questTable.deletedAt)))
+      .returning();
+
     return quest ? toQuestData(quest) : null;
   },
 

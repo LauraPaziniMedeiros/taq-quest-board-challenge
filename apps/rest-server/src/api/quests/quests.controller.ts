@@ -3,7 +3,15 @@ import { ErrorsResponse } from '#api/common/common.payload.js';
 import { CreateQuestUseCase } from '#domain/quests/create-quest.use-case.js';
 import { GetQuestUseCase } from '#domain/quests/get-quest.use-case.js';
 import { ListQuestsUseCase } from '#domain/quests/list-quests.use-case.js';
-import { QuestParams, QuestRequest, QuestResponse, QuestsQuery, QuestsResponse } from './quests.payload.js';
+import { UpdateQuestUseCase } from '#domain/quests/update-quest.use-case.js';
+import {
+  QuestParams,
+  QuestRequest,
+  QuestResponse,
+  QuestUpdateRequest,
+  QuestsQuery,
+  QuestsResponse,
+} from './quests.payload.js';
 
 export const QuestsController = new Elysia({ name: 'QuestsController', prefix: '/quests', tags: ['Quests'] })
   .model({ QuestResponse, QuestsResponse, ErrorsResponse })
@@ -29,5 +37,18 @@ export const QuestsController = new Elysia({ name: 'QuestsController', prefix: '
       detail: { description: 'Create a quest.' },
       body: QuestRequest,
       response: { 201: 'QuestResponse', 422: 'ErrorsResponse' },
+    },
+  )
+
+  .patch(
+    '/:id',
+    async ({ params, body }) => {
+      return UpdateQuestUseCase.exec(params.id, body);
+    },
+    {
+      detail: { description: 'Partially update a quest.' },
+      params: QuestParams,
+      body: QuestUpdateRequest,
+      response: { 200: 'QuestResponse', 404: 'ErrorsResponse', 422: 'ErrorsResponse' },
     },
   );
