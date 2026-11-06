@@ -1,4 +1,6 @@
 import type { Quest } from '@domain/model/quest.model';
+import { useEffect, useRef, useState } from 'react';
+import { getLevelTitle } from './quest-presentation';
 
 interface QuestPlayerHudProps {
   quests?: Quest[];
@@ -16,8 +18,25 @@ export function calculatePlayerProgress(quests: Quest[] = [], totalXp?: number) 
   };
 }
 
+export { getLevelTitle } from './quest-presentation';
+
 export const QuestPlayerHud = ({ quests, totalXp }: QuestPlayerHudProps = {}) => {
   const { level, currentLevelXp } = calculatePlayerProgress(quests ?? [], totalXp);
+  const levelTitle = getLevelTitle(level);
+  const previousLevelRef = useRef(level);
+  const [celebrationLevel, setCelebrationLevel] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (level > previousLevelRef.current) {
+      setCelebrationLevel(level);
+      const timeout = window.setTimeout(() => setCelebrationLevel(null), 3000);
+      previousLevelRef.current = level;
+      return () => window.clearTimeout(timeout);
+    }
+
+    previousLevelRef.current = level;
+    return undefined;
+  }, [level]);
 
   return (
     <div
@@ -36,17 +55,31 @@ export const QuestPlayerHud = ({ quests, totalXp }: QuestPlayerHudProps = {}) =>
             borderColor: 'var(--color-primary-medium)',
             color: 'var(--avatar-texto)',
           }}>
-          R
+          {levelTitle.charAt(0)}
         </div>
         <div>
           <div className="font-secondary text-[19px] font-bold" style={{ color: 'var(--ficha-nome)' }}>
-            Recruta
+            {levelTitle}
           </div>
           <div className="text-[15px] italic" style={{ color: 'var(--ficha-apoio)' }}>
-            Recruta da Guilda Taqtile · Nível {level}
+            {levelTitle} da Guilda Taqtile · Nível {level}
           </div>
         </div>
       </div>
+
+      {celebrationLevel !== null && (
+        <div
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
+          role="status"
+          className="font-secondary animate-bounce rounded-[6px] border px-[12px] py-[8px] text-[14px] font-bold"
+          style={{
+            background: 'var(--color-cta-medium)',
+            borderColor: 'var(--color-primary-medium)',
+            color: 'var(--avatar-texto)',
+          }}>
+          Parabéns! Você alcançou o nível {celebrationLevel}: {getLevelTitle(celebrationLevel)}!
+        </div>
+      )}
 
       <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-[6px]">
         <div className="flex justify-between text-[15px]" style={{ color: 'var(--ficha-xp-rotulo)' }}>
