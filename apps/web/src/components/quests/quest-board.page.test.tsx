@@ -138,7 +138,7 @@ describe('QuestBoardPage', () => {
     );
   });
 
-  it('removes a quest after confirmation', async () => {
+  it('announces removal after confirmation', async () => {
     const user = userEvent.setup();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     deleteQuest.mockResolvedValue(OPEN_QUEST);
@@ -147,9 +147,36 @@ describe('QuestBoardPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Remover' }));
 
-    expect(confirmSpy).toHaveBeenCalled();
+    expect(confirmSpy).toHaveBeenCalledWith(`Remover a missão "${OPEN_QUEST.title}"?`);
     expect(deleteQuest).toHaveBeenCalledWith(OPEN_QUEST.id);
     expect(removeQuestFromList).toHaveBeenCalledWith(OPEN_QUEST.id);
+    expect(await screen.findByText(`"${OPEN_QUEST.title}" removida.`)).toBeInTheDocument();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('announces that resolved quest XP stops counting after removal', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const RESOLVED_QUEST: Quest = { ...OPEN_QUEST, status: 'resolved', xpReward: 100 };
+    deleteQuest.mockResolvedValue(RESOLVED_QUEST);
+    useListQuestsMock.mockReturnValue({
+      quests: [RESOLVED_QUEST],
+      isLoading: false,
+      error: null,
+      refetch,
+      updateQuestInList,
+      removeQuestFromList,
+    });
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Remover' }));
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      `Remover a missão "${RESOLVED_QUEST.title}"? O XP dela (100 XP) não será descontado da sua pontuação.`,
+    );
+    expect(await screen.findByText(/O XP dela não será mais contado no quadro/)).toBeInTheDocument();
 
     confirmSpy.mockRestore();
   });
@@ -182,6 +209,9 @@ describe('QuestBoardPage', () => {
     expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ status: expect.anything() }));
     expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ id: expect.anything() }));
     expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ xpReward: expect.anything() }));
+    expect(
+      await screen.findByText(`Cópia de "${OPEN_QUEST.title}" criada. Modal de edição aberto.`),
+    ).toBeInTheDocument();
   });
 
   it('opens the duplicate for editing after creating it', async () => {
@@ -213,6 +243,7 @@ describe('QuestBoardPage', () => {
       difficulty: 'normal',
     });
     expect(refetch).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('Missão "Nova missão criada" criada.')).toBeInTheDocument();
   });
 
   it('edits a quest and refetches the board on success', async () => {
@@ -229,5 +260,26 @@ describe('QuestBoardPage', () => {
 
     expect(updateQuest).toHaveBeenCalledWith(OPEN_QUEST.id, { title: 'Quest editada' });
     expect(refetch).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('Missão "Quest editada" atualizada.')).toBeInTheDocument();
+  });
+
+  it('announces sorting a column', async () => {
+    const user = userEvent.setup();
+
+    render(<QuestBoardPage />);
+
+    await user.selectOptions(screen.getAllByLabelText('Ordenar missões')[0]!, 'xp_desc');
+
+    expect(await screen.findByText('Coluna Pergaminhos Novos ordenada por maior XP.')).toBeInTheDocument();
+  });
+
+  it('announces filtering by difficulty', async () => {
+    const user = userEvent.setup();
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('checkbox', { name: 'Normal' }));
+
+    expect(await screen.findByText('Filtro de dificuldade aplicado: Normal. Mostrando 1 missões.')).toBeInTheDocument();
   });
 });
