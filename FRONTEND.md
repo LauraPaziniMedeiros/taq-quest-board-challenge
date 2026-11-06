@@ -81,4 +81,6 @@ A 3-column kanban board (Pergaminhos Novos / Em Jornada / Lendas Concluídas), o
 status, with a modal to create new quests. Moving a quest between columns persists its status through
 `PATCH /quests/:id`, and quests can be edited from the board through the same endpoint. Difficulty is
 chosen when creating a quest (`easy`, `normal` or `high`, defaulting to `normal`); the XP reward is
-read-only, derived by the backend from the chosen difficulty.
+read-only, derived by the backend from the chosen difficulty. The XP bar reflects the sum of the XP
+rewards of resolved quests: every 100 XP is a new level, and the bar shows progress within the current
+level.
