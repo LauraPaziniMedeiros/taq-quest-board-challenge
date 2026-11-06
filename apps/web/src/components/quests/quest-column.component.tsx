@@ -15,6 +15,8 @@ interface QuestColumnProps {
   onMoveQuest: (quest: Quest, status: QuestStatus) => void;
   onRemove: (quest: Quest) => void;
   onDuplicate: (quest: Quest) => void;
+  sortMode?: 'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc';
+  onSortChange?: (mode: 'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc') => void;
 }
 
 export const QuestColumn = ({
@@ -27,6 +29,8 @@ export const QuestColumn = ({
   onMoveQuest,
   onRemove,
   onDuplicate,
+  sortMode = 'created_desc',
+  onSortChange,
 }: QuestColumnProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -84,11 +88,29 @@ export const QuestColumn = ({
             {subtitle}
           </span>
         </div>
-        <span
-          className="font-secondary flex h-[28px] min-w-[28px] items-center justify-center rounded-full px-sm text-[13px] font-bold"
-          style={{ background: 'var(--color-neutral-strong)', color: 'var(--color-primary-soft)' }}>
-          {quests.length}
-        </span>
+        <div className="flex items-center gap-sm">
+          <label className="sr-only" htmlFor={`sort-${status}`}>
+            Ordenar missões
+          </label>
+          <select
+            id={`sort-${status}`}
+            aria-label="Ordenar missões"
+            value={sortMode}
+            onChange={event =>
+              onSortChange?.(event.target.value as 'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc')
+            }
+            className="rounded border px-sm py-xs text-xs">
+            <option value="created_desc">Mais recentes</option>
+            <option value="created_asc">Mais antigas</option>
+            <option value="xp_desc">Maior XP</option>
+            <option value="xp_asc">Menor XP</option>
+          </select>
+          <span
+            className="font-secondary flex h-[28px] min-w-[28px] items-center justify-center rounded-full px-sm text-[13px] font-bold"
+            style={{ background: 'var(--color-neutral-strong)', color: 'var(--color-primary-soft)' }}>
+            {quests.length}
+          </span>
+        </div>
       </div>
 
       <div className="flex flex-col gap-[12px] p-[12px]">

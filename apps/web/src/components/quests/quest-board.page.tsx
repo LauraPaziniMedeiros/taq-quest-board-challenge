@@ -2,7 +2,14 @@ import { Button } from '@atomic/atm.button';
 import { Body } from '@atomic/atm.typography';
 import { LoadingCentered } from '@atomic/mol.loading';
 import { Col, Grid } from '@atomic/obj.grid';
-import type { Quest, QuestInput, QuestStatus, QuestUpdateInput } from '@domain/model/quest.model';
+import {
+  QUEST_DIFFICULTIES,
+  type Quest,
+  type QuestDifficulty,
+  type QuestInput,
+  type QuestStatus,
+  type QuestUpdateInput,
+} from '@domain/model/quest.model';
 import { useCreateQuest } from '@domain/quests/use-create-quest.use-case';
 import { useDeleteQuest } from '@domain/quests/use-delete-quest.use-case';
 import { useListQuests } from '@domain/quests/use-list-quests.use-case';
@@ -13,7 +20,7 @@ import { EditQuestModal } from './edit-quest-modal.component';
 import { QuestBoardHeader } from './quest-board-header.component';
 import { QuestColumn } from './quest-column.component';
 import { QuestPlayerHud } from './quest-player-hud.component';
-import { NEXT_STATUS, QUEST_STATUS_COLUMNS } from './quest-presentation';
+import { NEXT_STATUS, QUEST_DIFFICULTY_LABEL, QUEST_STATUS_COLUMNS } from './quest-presentation';
 
 const QuestBoardPage = () => {
   const {
@@ -29,6 +36,14 @@ const QuestBoardPage = () => {
   const { deleteQuest, error: deleteError } = useDeleteQuest();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
+  const [selectedDifficulties, setSelectedDifficulties] = useState<QuestDifficulty[]>([]);
+  const [sortModes, setSortModes] = useState<
+    Record<QuestStatus, 'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc'>
+  >({
+    open: 'created_desc',
+    in_progress: 'created_desc',
+    resolved: 'created_desc',
+  });
   // Only the first load replaces the board with a spinner; refetches keep the current columns on screen.
   const isInitialLoading = isLoading && quests.length === 0;
 
@@ -90,13 +105,35 @@ const QuestBoardPage = () => {
     [updateQuest, updateQuestInList],
   );
 
+  const visibleQuests = useMemo(
+    () =>
+      selectedDifficulties.length === 0
+        ? quests
+        : quests.filter(quest => selectedDifficulties.includes(quest.difficulty)),
+    [quests, selectedDifficulties],
+  );
+
   const columns = useMemo(
     () =>
-      QUEST_STATUS_COLUMNS.map(column => ({
-        ...column,
-        quests: quests.filter(quest => quest.status === column.status),
-      })),
-    [quests],
+      QUEST_STATUS_COLUMNS.map(column => {
+        const columnQuests = visibleQuests.filter(quest => quest.status === column.status);
+        const sortedQuests = [...columnQuests].sort((first, second) => {
+          switch (sortModes[column.status]) {
+            case 'created_asc':
+              return new Date(first.createdAt).getTime() - new Date(second.createdAt).getTime();
+            case 'xp_desc':
+              return second.xpReward - first.xpReward;
+            case 'xp_asc':
+              return first.xpReward - second.xpReward;
+            case 'created_desc':
+            default:
+              return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime();
+          }
+        });
+
+        return { ...column, quests: sortedQuests };
+      }),
+    [visibleQuests, sortModes],
   );
 
   const handleCreateQuest = async (input: QuestInput) => {
@@ -127,7 +164,6 @@ const QuestBoardPage = () => {
 
   const handleRemoveQuest = async (quest: Quest) => {
     const deleted = await deleteQuest(quest.id);
-    console.log('deleted', deleted);
     if (deleted) {
       removeQuestFromList(quest.id);
     }
@@ -172,24 +208,47 @@ const QuestBoardPage = () => {
       )}
 
       {!isInitialLoading && !error && (
-        <Col sm={12}>
-          <div className="grid grid-cols-3 items-start gap-[18px]">
-            {columns.map(column => (
-              <QuestColumn
-                key={column.status}
-                status={column.status}
-                title={column.title}
-                subtitle={column.subtitle}
-                quests={column.quests}
-                onAdvance={handleAdvance}
-                onEdit={handleEditQuest}
-                onMoveQuest={handleMoveQuest}
-                onRemove={handleRemoveQuest}
-                onDuplicate={handleDuplicateQuest}
-              />
-            ))}
-          </div>
-        </Col>
+        <>
+          <Col sm={12} className="mb-md">
+            <fieldset className="flex flex-wrap items-center gap-sm">
+              <legend className="mr-sm font-secondary text-sm font-semibold">Filtrar por dificuldade</legend>
+              {QUEST_DIFFICULTIES.map(difficulty => (
+                <label key={difficulty} className="flex items-center gap-xs text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedDifficulties.includes(difficulty)}
+                    onChange={event => {
+                      setSelectedDifficulties(previous =>
+                        event.target.checked ? [...previous, difficulty] : previous.filter(item => item !== difficulty),
+                      );
+                    }}
+                  />
+                  {QUEST_DIFFICULTY_LABEL[difficulty]}
+                </label>
+              ))}
+            </fieldset>
+          </Col>
+          <Col sm={12}>
+            <div className="grid grid-cols-3 items-start gap-[18px]">
+              {columns.map(column => (
+                <QuestColumn
+                  key={column.status}
+                  status={column.status}
+                  title={column.title}
+                  subtitle={column.subtitle}
+                  quests={column.quests}
+                  onAdvance={handleAdvance}
+                  onEdit={handleEditQuest}
+                  onMoveQuest={handleMoveQuest}
+                  onRemove={handleRemoveQuest}
+                  onDuplicate={handleDuplicateQuest}
+                  sortMode={sortModes[column.status]}
+                  onSortChange={mode => setSortModes(previous => ({ ...previous, [column.status]: mode }))}
+                />
+              ))}
+            </div>
+          </Col>
+        </>
       )}
 
       {updateError && (
