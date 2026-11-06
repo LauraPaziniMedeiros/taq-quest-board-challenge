@@ -10,6 +10,7 @@ interface UseListQuestsResult {
   isLoading: boolean;
   error: ApiError | null;
   refetch: () => void;
+  updateQuestInList?: (quest: Quest) => void;
 }
 
 export function useListQuests(): UseListQuestsResult {
@@ -48,5 +49,9 @@ export function useListQuests(): UseListQuestsResult {
     return () => requestRef.current?.abort();
   }, [load]);
 
-  return { quests, isLoading, error, refetch: load };
+  const updateQuestInList = useCallback((updated: Quest) => {
+    setQuests(previous => previous.map(quest => (quest.id === updated.id ? updated : quest)));
+  }, []);
+
+  return { quests, isLoading, error, refetch: load, updateQuestInList };
 }

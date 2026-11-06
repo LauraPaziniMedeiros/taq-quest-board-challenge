@@ -37,14 +37,22 @@ const OPEN_QUEST: Quest = {
 const refetch = vi.fn();
 const createQuest = vi.fn();
 const updateQuest = vi.fn();
+const updateQuestInList = vi.fn();
 
 beforeEach(() => {
   refetch.mockReset();
   createQuest.mockReset();
   updateQuest.mockReset();
-  useListQuestsMock.mockReturnValue({ quests: [OPEN_QUEST], isLoading: false, error: null, refetch });
+  updateQuestInList.mockReset();
   useCreateQuestMock.mockReturnValue({ createQuest, isLoading: false, error: null });
   useUpdateQuestMock.mockReturnValue({ updateQuest, isLoading: false, error: null });
+  useListQuestsMock.mockReturnValue({
+    quests: [OPEN_QUEST],
+    isLoading: false,
+    error: null,
+    refetch,
+    updateQuestInList,
+  });
 });
 
 describe('QuestBoardPage', () => {
@@ -88,7 +96,7 @@ describe('QuestBoardPage', () => {
     expect(screen.getByRole('heading', { name: 'Pergaminhos Novos' })).toBeInTheDocument();
   });
 
-  it('persists a quest status change when advanced', async () => {
+  it('updates a quest status optimistically when advanced', async () => {
     const user = userEvent.setup();
     updateQuest.mockResolvedValue({ ...OPEN_QUEST, status: 'in_progress' });
 
@@ -96,9 +104,22 @@ describe('QuestBoardPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Aceitar missão' }));
 
+    expect(updateQuestInList).toHaveBeenCalledWith({ ...OPEN_QUEST, status: 'in_progress' });
     expect(updateQuest).toHaveBeenCalledWith(OPEN_QUEST.id, { status: 'in_progress' });
-    expect(refetch).toHaveBeenCalledTimes(1);
+    expect(updateQuestInList).toHaveBeenLastCalledWith({ ...OPEN_QUEST, status: 'in_progress' });
     expect(createQuest).not.toHaveBeenCalled();
+  });
+
+  it('rolls a quest back when an advance fails', async () => {
+    const user = userEvent.setup();
+    updateQuest.mockRejectedValue(new Error('falhou'));
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Aceitar missão' }));
+
+    expect(updateQuestInList).toHaveBeenNthCalledWith(1, { ...OPEN_QUEST, status: 'in_progress' });
+    expect(updateQuestInList).toHaveBeenLastCalledWith(OPEN_QUEST);
   });
 
   it('creates a quest and refetches the board on success', async () => {

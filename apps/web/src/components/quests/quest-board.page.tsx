@@ -15,7 +15,7 @@ import { QuestPlayerHud } from './quest-player-hud.component';
 import { NEXT_STATUS, QUEST_STATUS_COLUMNS } from './quest-presentation';
 
 const QuestBoardPage = () => {
-  const { quests, isLoading, error, refetch } = useListQuests();
+  const { quests, isLoading, error, refetch, updateQuestInList = () => {} } = useListQuests();
   const { createQuest, isLoading: isCreating, error: createError } = useCreateQuest();
   const { updateQuest, isLoading: isUpdating, error: updateError } = useUpdateQuest();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -30,12 +30,24 @@ const QuestBoardPage = () => {
         return;
       }
 
-      const updated = await updateQuest(quest.id, { status: next });
+      const previousQuest = quest;
+      const optimisticQuest = { ...quest, status: next };
+      updateQuestInList(optimisticQuest);
+
+      let updated: Quest | null = null;
+      try {
+        updated = await updateQuest(quest.id, { status: next });
+      } catch {
+        updated = null;
+      }
+
       if (updated) {
-        refetch();
+        updateQuestInList(updated);
+      } else {
+        updateQuestInList(previousQuest);
       }
     },
-    [updateQuest, refetch],
+    [updateQuest, updateQuestInList],
   );
 
   const columns = useMemo(
@@ -113,6 +125,12 @@ const QuestBoardPage = () => {
               />
             ))}
           </div>
+        </Col>
+      )}
+
+      {updateError && (
+        <Col sm={12} className="text-center">
+          <Body role="alert">{updateError.message}</Body>
         </Col>
       )}
 
