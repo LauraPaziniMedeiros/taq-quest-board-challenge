@@ -49,6 +49,15 @@ export const QuestsDbDatasource = {
 
     return quest ? toQuestData(quest) : null;
   },
+  async delete(id: string): Promise<QuestData | null> {
+    const [quest] = await dbClient
+      .update(questTable)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(and(eq(questTable.id, id), isNull(questTable.deletedAt)))
+      .returning();
+
+    return quest ? toQuestData(quest) : null;
+  },
 
   async findMany(status: QuestStatus | undefined, page: PageInput): Promise<Paginated<QuestData>> {
     const offset = page.offset ?? 0;
