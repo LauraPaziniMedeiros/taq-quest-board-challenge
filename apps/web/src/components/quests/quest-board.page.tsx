@@ -80,7 +80,7 @@ const QuestBoardPage = () => {
       </Col>
 
       <Col sm={12} className="mb-lg">
-        <QuestPlayerHud />
+        <QuestPlayerHud quests={quests} />
       </Col>
 
       {isInitialLoading && (
