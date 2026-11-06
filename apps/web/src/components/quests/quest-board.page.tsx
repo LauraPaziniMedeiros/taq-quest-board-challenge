@@ -2,7 +2,7 @@ import { Button } from '@atomic/atm.button';
 import { Body } from '@atomic/atm.typography';
 import { LoadingCentered } from '@atomic/mol.loading';
 import { Col, Grid } from '@atomic/obj.grid';
-import type { Quest, QuestInput, QuestUpdateInput } from '@domain/model/quest.model';
+import type { Quest, QuestInput, QuestStatus, QuestUpdateInput } from '@domain/model/quest.model';
 import { useCreateQuest } from '@domain/quests/use-create-quest.use-case';
 import { useListQuests } from '@domain/quests/use-list-quests.use-case';
 import { useUpdateQuest } from '@domain/quests/use-update-quest.use-case';
@@ -37,6 +37,32 @@ const QuestBoardPage = () => {
       let updated: Quest | null = null;
       try {
         updated = await updateQuest(quest.id, { status: next });
+      } catch {
+        updated = null;
+      }
+
+      if (updated) {
+        updateQuestInList(updated);
+      } else {
+        updateQuestInList(previousQuest);
+      }
+    },
+    [updateQuest, updateQuestInList],
+  );
+
+  const handleMoveQuest = useCallback(
+    async (quest: Quest, newStatus: QuestStatus) => {
+      if (quest.status === newStatus) {
+        return;
+      }
+
+      const previousQuest = quest;
+      const optimisticQuest = { ...quest, status: newStatus };
+      updateQuestInList(optimisticQuest);
+
+      let updated: Quest | null = null;
+      try {
+        updated = await updateQuest(quest.id, { status: newStatus });
       } catch {
         updated = null;
       }
@@ -122,6 +148,7 @@ const QuestBoardPage = () => {
                 quests={column.quests}
                 onAdvance={handleAdvance}
                 onEdit={handleEditQuest}
+                onMoveQuest={handleMoveQuest}
               />
             ))}
           </div>

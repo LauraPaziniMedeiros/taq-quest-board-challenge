@@ -1,5 +1,6 @@
 import { FaIcon } from '@atomic/atm.fa-icon';
 import type { Quest, QuestStatus } from '@domain/model/quest.model';
+import { useState } from 'react';
 import { style } from './quest-card.component.style';
 import { ADVANCE_LABEL, QUEST_DIFFICULTY_LABEL, formatQuestAge } from './quest-presentation';
 
@@ -14,9 +15,21 @@ export function QuestCard(props: QuestCardProps) {
   const { quest, columnStatus, onAdvance, onEdit } = props;
   const advanceLabel = ADVANCE_LABEL[columnStatus];
   const classes = style({ columnStatus });
+  const [isDragging, setIsDragging] = useState(false);
 
   return (
-    <article className={classes.card()}>
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <article
+      className={classes.card()}
+      draggable
+      onDragStart={event => {
+        event.dataTransfer.setData('text/plain', quest.id);
+        event.dataTransfer.setData('application/json', JSON.stringify(quest));
+        event.dataTransfer.effectAllowed = 'move';
+        setIsDragging(true);
+      }}
+      onDragEnd={() => setIsDragging(false)}
+      style={{ opacity: isDragging ? 0.5 : 1 }}>
       <h3 className={classes.title()}>{quest.title}</h3>
       <p className={classes.description()}>{quest.description}</p>
       <div className={classes.tags()}>
