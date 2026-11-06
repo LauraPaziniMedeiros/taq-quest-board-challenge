@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createQuest, listQuests } from './quests.datasource';
+import { createQuest, listQuests, updateQuest } from './quests.datasource';
 
 const QUEST_RESPONSE = {
   id: 'q_1',
@@ -74,6 +74,23 @@ describe('createQuest', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ title: 'Enfrentar o dragão', description: 'Derrote a besta', difficulty: 'high' }),
+      }),
+    );
+    expect(result).toEqual(QUEST_RESPONSE);
+  });
+});
+
+describe('updateQuest', () => {
+  it('PATCHes the quest and returns the parsed quest', async () => {
+    mockFetchOnce(QUEST_RESPONSE);
+
+    const result = await updateQuest('q_1', { title: 'Novo título' });
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/v1\/quests\/q_1$/),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ title: 'Novo título' }),
       }),
     );
     expect(result).toEqual(QUEST_RESPONSE);

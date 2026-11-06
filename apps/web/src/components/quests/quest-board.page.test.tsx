@@ -2,6 +2,7 @@ import { ApiError } from '@core/http/http-client';
 import type { Quest } from '@domain/model/quest.model';
 import { useCreateQuest } from '@domain/quests/use-create-quest.use-case';
 import { useListQuests } from '@domain/quests/use-list-quests.use-case';
+import { useUpdateQuest } from '@domain/quests/use-update-quest.use-case';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -15,8 +16,13 @@ vi.mock('@domain/quests/use-create-quest.use-case', () => ({
   useCreateQuest: vi.fn(),
 }));
 
+vi.mock('@domain/quests/use-update-quest.use-case', () => ({
+  useUpdateQuest: vi.fn(),
+}));
+
 const useListQuestsMock = vi.mocked(useListQuests);
 const useCreateQuestMock = vi.mocked(useCreateQuest);
+const useUpdateQuestMock = vi.mocked(useUpdateQuest);
 
 const OPEN_QUEST: Quest = {
   id: 'q_1',
@@ -30,12 +36,15 @@ const OPEN_QUEST: Quest = {
 
 const refetch = vi.fn();
 const createQuest = vi.fn();
+const updateQuest = vi.fn();
 
 beforeEach(() => {
   refetch.mockReset();
   createQuest.mockReset();
+  updateQuest.mockReset();
   useListQuestsMock.mockReturnValue({ quests: [OPEN_QUEST], isLoading: false, error: null, refetch });
   useCreateQuestMock.mockReturnValue({ createQuest, isLoading: false, error: null });
+  useUpdateQuestMock.mockReturnValue({ updateQuest, isLoading: false, error: null });
 });
 
 describe('QuestBoardPage', () => {
@@ -79,13 +88,16 @@ describe('QuestBoardPage', () => {
     expect(screen.getByRole('heading', { name: 'Pergaminhos Novos' })).toBeInTheDocument();
   });
 
-  it('moves a quest to the next column when advanced, without calling the backend', async () => {
+  it('persists a quest status change when advanced', async () => {
     const user = userEvent.setup();
+    updateQuest.mockResolvedValue({ ...OPEN_QUEST, status: 'in_progress' });
+
     render(<QuestBoardPage />);
 
     await user.click(screen.getByRole('button', { name: 'Aceitar missão' }));
 
-    expect(screen.getByRole('button', { name: 'Selar a vitória' })).toBeInTheDocument();
+    expect(updateQuest).toHaveBeenCalledWith(OPEN_QUEST.id, { status: 'in_progress' });
+    expect(refetch).toHaveBeenCalledTimes(1);
     expect(createQuest).not.toHaveBeenCalled();
   });
 
@@ -105,6 +117,22 @@ describe('QuestBoardPage', () => {
       description: 'Descrição da missão',
       difficulty: 'normal',
     });
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('edits a quest and refetches the board on success', async () => {
+    const user = userEvent.setup();
+    updateQuest.mockResolvedValue({ ...OPEN_QUEST, title: 'Quest editada' });
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Editar' }));
+    const titleInput = screen.getByLabelText('Título da missão');
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Quest editada');
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(updateQuest).toHaveBeenCalledWith(OPEN_QUEST.id, { title: 'Quest editada' });
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 });

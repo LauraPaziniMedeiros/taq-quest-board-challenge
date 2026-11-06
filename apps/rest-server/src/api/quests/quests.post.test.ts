@@ -67,14 +67,17 @@ describe('POST /quests', () => {
     ['an unknown value', 'legendary'],
     ['a number', 42],
     ['null', null],
-  ])('should default to normal when the difficulty is %s', async (_label, difficulty) => {
-    const body = { title: 'Invalid difficulty', description: 'desc', difficulty } as any;
-    const response = await requestMaker.post({ endpoint, body });
+  ])(
+    'should default to normal when the difficulty is invalid and not one of: easy, normal, high',
+    async (_label, difficulty) => {
+      const body = { title: 'Invalid difficulty', description: 'desc', difficulty } as any;
+      const response = await requestMaker.post({ endpoint, body });
 
-    const questDb = (await dbClient.query.questTable.findFirst({ where: { id: questId } }))!;
-    checkQuest(response.data, questDb);
-    expect(questDb.difficulty).toBe('normal');
-  });
+      const questDb = (await dbClient.query.questTable.findFirst({ where: { id: questId } }))!;
+      checkQuest(response.data, questDb);
+      expect(questDb.difficulty).toBe('normal');
+    },
+  );
 
   it('should give an error if title is missing', async () => {
     const body = { description: 'desc' } as any;
