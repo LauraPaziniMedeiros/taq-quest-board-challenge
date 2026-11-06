@@ -7,10 +7,11 @@ interface QuestCardProps {
   quest: Quest;
   columnStatus: QuestStatus;
   onAdvance: (quest: Quest) => void;
+  onEdit: (quest: Quest) => void;
 }
 
 export function QuestCard(props: QuestCardProps) {
-  const { quest, columnStatus, onAdvance } = props;
+  const { quest, columnStatus, onAdvance, onEdit } = props;
   const advanceLabel = ADVANCE_LABEL[columnStatus];
   const classes = style({ columnStatus });
 
@@ -28,16 +29,21 @@ export function QuestCard(props: QuestCardProps) {
         </span>
         <span className={classes.meta()}>{formatQuestAge(quest.createdAt)}</span>
       </div>
-      {advanceLabel ? (
-        <button type="button" onClick={() => onAdvance(quest)} className={classes.advanceButton()}>
-          {advanceLabel}
+      <div className="flex gap-sm">
+        <button type="button" onClick={() => onEdit(quest)} className={classes.editButton()}>
+          Editar
         </button>
-      ) : (
-        <div className={classes.completed()}>
-          <FaIcon.Check className={classes.completedIcon()} />
-          Cantada pelos bardos
-        </div>
-      )}
+        {advanceLabel ? (
+          <button type="button" onClick={() => onAdvance(quest)} className={classes.advanceButton()}>
+            {advanceLabel}
+          </button>
+        ) : (
+          <div className={classes.completed()}>
+            <FaIcon.Check className={classes.completedIcon()} />
+            Cantada pelos bardos
+          </div>
+        )}
+      </div>
     </article>
   );
 }
