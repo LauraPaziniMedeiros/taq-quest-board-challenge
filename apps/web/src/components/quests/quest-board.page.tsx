@@ -22,6 +22,13 @@ import { QuestColumn } from './quest-column.component';
 import { QuestPlayerHud } from './quest-player-hud.component';
 import { NEXT_STATUS, QUEST_DIFFICULTY_LABEL, QUEST_STATUS_COLUMNS } from './quest-presentation';
 
+const SORT_LABELS: Record<'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc', string> = {
+  created_desc: 'mais recentes',
+  created_asc: 'mais antigas',
+  xp_desc: 'maior XP',
+  xp_asc: 'menor XP',
+};
+
 const QuestBoardPage = () => {
   const {
     quests,
@@ -36,6 +43,7 @@ const QuestBoardPage = () => {
   const { deleteQuest, error: deleteError } = useDeleteQuest();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
+  const [announcement, setAnnouncement] = useState({ id: 0, message: '' });
   const [selectedDifficulties, setSelectedDifficulties] = useState<QuestDifficulty[]>([]);
   const [sortModes, setSortModes] = useState<
     Record<QuestStatus, 'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc'>
@@ -46,6 +54,55 @@ const QuestBoardPage = () => {
   });
   // Only the first load replaces the board with a spinner; refetches keep the current columns on screen.
   const isInitialLoading = isLoading && quests.length === 0;
+
+  const announce = useCallback((message: string) => {
+    setAnnouncement(previous => ({ id: previous.id + 1, message }));
+  }, []);
+
+  const announceQuestMove = useCallback(
+    (quest: Quest, status: QuestStatus, succeeded: boolean) => {
+      const destination = QUEST_STATUS_COLUMNS.find(column => column.status === status);
+      const columnName = destination?.title ?? status;
+      announce(
+        succeeded
+          ? `${quest.title} movida para ${columnName}.`
+          : `Falha ao mover ${quest.title} para ${columnName}. Tente novamente.`,
+      );
+    },
+    [announce],
+  );
+
+  const handleSortChange = useCallback(
+    (status: QuestStatus, mode: 'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc') => {
+      setSortModes(previous => ({ ...previous, [status]: mode }));
+      const column = QUEST_STATUS_COLUMNS.find(item => item.status === status);
+      announce(`Coluna ${column?.title ?? status} ordenada por ${SORT_LABELS[mode]}.`);
+    },
+    [announce],
+  );
+
+  const handleDifficultyFilterChange = useCallback(
+    (difficulty: QuestDifficulty, checked: boolean) => {
+      const nextDifficulties = checked
+        ? [...selectedDifficulties, difficulty]
+        : selectedDifficulties.filter(item => item !== difficulty);
+
+      setSelectedDifficulties(nextDifficulties);
+      const visibleCount =
+        nextDifficulties.length === 0
+          ? quests.length
+          : quests.filter(quest => nextDifficulties.includes(quest.difficulty)).length;
+
+      announce(
+        nextDifficulties.length === 0
+          ? `Filtro removido. Mostrando ${visibleCount} missões.`
+          : `Filtro de dificuldade aplicado: ${nextDifficulties
+              .map(item => QUEST_DIFFICULTY_LABEL[item])
+              .join(', ')}. Mostrando ${visibleCount} missões.`,
+      );
+    },
+    [announce, quests, selectedDifficulties],
+  );
 
   const handleAdvance = useCallback(
     async (quest: Quest) => {
@@ -67,11 +124,13 @@ const QuestBoardPage = () => {
 
       if (updated) {
         updateQuestInList(updated);
+        announceQuestMove(quest, next, true);
       } else {
         updateQuestInList(previousQuest);
+        announceQuestMove(quest, next, false);
       }
     },
-    [updateQuest, updateQuestInList],
+    [announceQuestMove, updateQuest, updateQuestInList],
   );
 
   const handleMoveQuest = useCallback(
@@ -98,11 +157,13 @@ const QuestBoardPage = () => {
 
       if (updated) {
         updateQuestInList(updated);
+        announceQuestMove(quest, newStatus, true);
       } else {
         updateQuestInList(previousQuest);
+        announceQuestMove(quest, newStatus, false);
       }
     },
-    [updateQuest, updateQuestInList],
+    [announceQuestMove, updateQuest, updateQuestInList],
   );
 
   const visibleQuests = useMemo(
@@ -141,6 +202,7 @@ const QuestBoardPage = () => {
     if (created) {
       setIsCreateModalOpen(false);
       refetch();
+      announce(`Missão "${created.title}" criada.`);
     }
     return Boolean(created);
   };
@@ -159,6 +221,9 @@ const QuestBoardPage = () => {
     if (created) {
       refetch();
       setEditingQuest(created);
+      announce(`Cópia de "${quest.title}" criada. Modal de edição aberto.`);
+    } else {
+      announce(`Falha ao duplicar "${quest.title}". Tente novamente.`);
     }
   };
 
@@ -166,6 +231,13 @@ const QuestBoardPage = () => {
     const deleted = await deleteQuest(quest.id);
     if (deleted) {
       removeQuestFromList(quest.id);
+      announce(
+        quest.status === 'resolved'
+          ? `"${quest.title}" removida. O XP dela não será mais contado no quadro.`
+          : `"${quest.title}" removida.`,
+      );
+    } else {
+      announce(`Falha ao remover "${quest.title}". Tente novamente.`);
     }
   };
 
@@ -176,14 +248,19 @@ const QuestBoardPage = () => {
 
     const updated = await updateQuest(editingQuest.id, input);
     if (updated) {
+      const updatedTitle = updated.title;
       setEditingQuest(null);
       refetch();
+      announce(`Missão "${updatedTitle}" atualizada.`);
     }
     return Boolean(updated);
   };
 
   return (
     <Grid className="max-w-[1100px] py-lg">
+      <output key={announcement.id} className="sr-only" aria-live="polite" aria-atomic="true">
+        {announcement.message}
+      </output>
       <Col sm={12} className="mb-lg">
         <QuestBoardHeader onCreateClick={() => setIsCreateModalOpen(true)} />
       </Col>
@@ -217,11 +294,7 @@ const QuestBoardPage = () => {
                   <input
                     type="checkbox"
                     checked={selectedDifficulties.includes(difficulty)}
-                    onChange={event => {
-                      setSelectedDifficulties(previous =>
-                        event.target.checked ? [...previous, difficulty] : previous.filter(item => item !== difficulty),
-                      );
-                    }}
+                    onChange={event => handleDifficultyFilterChange(difficulty, event.target.checked)}
                   />
                   {QUEST_DIFFICULTY_LABEL[difficulty]}
                 </label>
@@ -243,7 +316,7 @@ const QuestBoardPage = () => {
                   onRemove={handleRemoveQuest}
                   onDuplicate={handleDuplicateQuest}
                   sortMode={sortModes[column.status]}
-                  onSortChange={mode => setSortModes(previous => ({ ...previous, [column.status]: mode }))}
+                  onSortChange={mode => handleSortChange(column.status, mode)}
                 />
               ))}
             </div>

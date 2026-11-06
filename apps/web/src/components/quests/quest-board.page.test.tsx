@@ -119,6 +119,7 @@ describe('QuestBoardPage', () => {
     expect(updateQuestInList).toHaveBeenCalledWith({ ...OPEN_QUEST, status: 'in_progress' });
     expect(updateQuest).toHaveBeenCalledWith(OPEN_QUEST.id, { status: 'in_progress' });
     expect(updateQuestInList).toHaveBeenLastCalledWith({ ...OPEN_QUEST, status: 'in_progress' });
+    expect(await screen.findByRole('status')).toHaveTextContent(`${OPEN_QUEST.title} movida para Em Jornada.`);
     expect(createQuest).not.toHaveBeenCalled();
   });
 
@@ -132,6 +133,9 @@ describe('QuestBoardPage', () => {
 
     expect(updateQuestInList).toHaveBeenNthCalledWith(1, { ...OPEN_QUEST, status: 'in_progress' });
     expect(updateQuestInList).toHaveBeenLastCalledWith(OPEN_QUEST);
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      `Falha ao mover ${OPEN_QUEST.title} para Em Jornada. Tente novamente.`,
+    );
   });
 
   it('removes a quest after confirmation', async () => {
