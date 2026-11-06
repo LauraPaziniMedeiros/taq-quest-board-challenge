@@ -18,6 +18,13 @@ export interface QuestInput {
   difficulty: QuestDifficulty;
 }
 
+export interface QuestUpdateInput {
+  title?: string;
+  description?: string;
+  difficulty?: QuestDifficulty;
+  status?: QuestStatus;
+}
+
 export interface PageInfo {
   limit: number;
   offset: number;
