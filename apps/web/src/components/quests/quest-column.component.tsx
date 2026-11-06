@@ -13,9 +13,19 @@ interface QuestColumnProps {
   onAdvance: (quest: Quest) => void;
   onEdit: (quest: Quest) => void;
   onMoveQuest: (quest: Quest, status: QuestStatus) => void;
+  onRemove: (quest: Quest) => void;
 }
 
-export const QuestColumn = ({ status, title, subtitle, quests, onAdvance, onEdit, onMoveQuest }: QuestColumnProps) => {
+export const QuestColumn = ({
+  status,
+  title,
+  subtitle,
+  quests,
+  onAdvance,
+  onEdit,
+  onMoveQuest,
+  onRemove,
+}: QuestColumnProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (event: DragEvent<HTMLElement>) => {
@@ -88,7 +98,14 @@ export const QuestColumn = ({ status, title, subtitle, quests, onAdvance, onEdit
           </div>
         )}
         {quests.map(quest => (
-          <QuestCard key={quest.id} quest={quest} columnStatus={status} onAdvance={onAdvance} onEdit={onEdit} />
+          <QuestCard
+            key={quest.id}
+            quest={quest}
+            columnStatus={status}
+            onAdvance={onAdvance}
+            onEdit={onEdit}
+            onRemove={onRemove}
+          />
         ))}
       </div>
     </section>

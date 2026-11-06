@@ -40,3 +40,10 @@ export async function updateQuest(id: string, input: QuestUpdateInput): Promise<
   });
   return questSchema.parse(response);
 }
+
+export async function deleteQuest(id: string): Promise<Quest> {
+  const response = await apiRequest<unknown>(`/quests/${id}`, {
+    method: 'DELETE',
+  });
+  return questSchema.parse(response);
+}

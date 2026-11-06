@@ -11,6 +11,7 @@ interface UseListQuestsResult {
   error: ApiError | null;
   refetch: () => void;
   updateQuestInList?: (quest: Quest) => void;
+  removeQuestFromList?: (id: string) => void;
 }
 
 export function useListQuests(): UseListQuestsResult {
@@ -53,5 +54,9 @@ export function useListQuests(): UseListQuestsResult {
     setQuests(previous => previous.map(quest => (quest.id === updated.id ? updated : quest)));
   }, []);
 
-  return { quests, isLoading, error, refetch: load, updateQuestInList };
+  const removeQuestFromList = useCallback((id: string) => {
+    setQuests(previous => previous.filter(quest => quest.id !== id));
+  }, []);
+
+  return { quests, isLoading, error, refetch: load, updateQuestInList, removeQuestFromList };
 }

@@ -9,10 +9,11 @@ interface QuestCardProps {
   columnStatus: QuestStatus;
   onAdvance: (quest: Quest) => void;
   onEdit: (quest: Quest) => void;
+  onRemove: (quest: Quest) => void;
 }
 
 export function QuestCard(props: QuestCardProps) {
-  const { quest, columnStatus, onAdvance, onEdit } = props;
+  const { quest, columnStatus, onAdvance, onEdit, onRemove } = props;
   const advanceLabel = ADVANCE_LABEL[columnStatus];
   const classes = style({ columnStatus });
   const [isDragging, setIsDragging] = useState(false);
@@ -45,6 +46,20 @@ export function QuestCard(props: QuestCardProps) {
       <div className="flex gap-sm">
         <button type="button" onClick={() => onEdit(quest)} className={classes.editButton()}>
           Editar
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const message =
+              quest.status === 'resolved'
+                ? `Remover a missão "${quest.title}"? O XP dela (${quest.xpReward} XP) não será descontado da sua pontuação.`
+                : `Remover a missão "${quest.title}"?`;
+            if (window.confirm(message)) {
+              onRemove(quest);
+            }
+          }}
+          className={classes.removeButton()}>
+          Remover
         </button>
         {advanceLabel ? (
           <button type="button" onClick={() => onAdvance(quest)} className={classes.advanceButton()}>

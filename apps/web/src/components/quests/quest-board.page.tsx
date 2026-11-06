@@ -4,6 +4,7 @@ import { LoadingCentered } from '@atomic/mol.loading';
 import { Col, Grid } from '@atomic/obj.grid';
 import type { Quest, QuestInput, QuestStatus, QuestUpdateInput } from '@domain/model/quest.model';
 import { useCreateQuest } from '@domain/quests/use-create-quest.use-case';
+import { useDeleteQuest } from '@domain/quests/use-delete-quest.use-case';
 import { useListQuests } from '@domain/quests/use-list-quests.use-case';
 import { useUpdateQuest } from '@domain/quests/use-update-quest.use-case';
 import { useCallback, useMemo, useState } from 'react';
@@ -15,9 +16,17 @@ import { QuestPlayerHud } from './quest-player-hud.component';
 import { NEXT_STATUS, QUEST_STATUS_COLUMNS } from './quest-presentation';
 
 const QuestBoardPage = () => {
-  const { quests, isLoading, error, refetch, updateQuestInList = () => {} } = useListQuests();
+  const {
+    quests,
+    isLoading,
+    error,
+    refetch,
+    updateQuestInList = () => {},
+    removeQuestFromList = () => {},
+  } = useListQuests();
   const { createQuest, isLoading: isCreating, error: createError } = useCreateQuest();
   const { updateQuest, isLoading: isUpdating, error: updateError } = useUpdateQuest();
+  const { deleteQuest, error: deleteError } = useDeleteQuest();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
   // Only the first load replaces the board with a spinner; refetches keep the current columns on screen.
@@ -103,6 +112,14 @@ const QuestBoardPage = () => {
     setEditingQuest(quest);
   };
 
+  const handleRemoveQuest = async (quest: Quest) => {
+    const deleted = await deleteQuest(quest.id);
+    console.log('deleted', deleted);
+    if (deleted) {
+      removeQuestFromList(quest.id);
+    }
+  };
+
   const handleUpdateQuest = async (input: QuestUpdateInput) => {
     if (!editingQuest) {
       return false;
@@ -154,6 +171,7 @@ const QuestBoardPage = () => {
                 onAdvance={handleAdvance}
                 onEdit={handleEditQuest}
                 onMoveQuest={handleMoveQuest}
+                onRemove={handleRemoveQuest}
               />
             ))}
           </div>
@@ -163,6 +181,12 @@ const QuestBoardPage = () => {
       {updateError && (
         <Col sm={12} className="text-center">
           <Body role="alert">{updateError.message}</Body>
+        </Col>
+      )}
+
+      {deleteError && (
+        <Col sm={12} className="text-center">
+          <Body role="alert">{deleteError.message}</Body>
         </Col>
       )}
 
