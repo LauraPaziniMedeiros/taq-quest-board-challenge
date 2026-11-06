@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createQuest, listQuests, updateQuest } from './quests.datasource';
+import { createQuest, deleteQuest, listQuests, updateQuest } from './quests.datasource';
 
 const QUEST_RESPONSE = {
   id: 'q_1',
@@ -92,6 +92,20 @@ describe('updateQuest', () => {
         method: 'PATCH',
         body: JSON.stringify({ title: 'Novo título' }),
       }),
+    );
+    expect(result).toEqual(QUEST_RESPONSE);
+  });
+});
+
+describe('deleteQuest', () => {
+  it('DELETEs the quest and returns the parsed quest', async () => {
+    mockFetchOnce(QUEST_RESPONSE);
+
+    const result = await deleteQuest('q_1');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/v1\/quests\/q_1$/),
+      expect.objectContaining({ method: 'DELETE' }),
     );
     expect(result).toEqual(QUEST_RESPONSE);
   });

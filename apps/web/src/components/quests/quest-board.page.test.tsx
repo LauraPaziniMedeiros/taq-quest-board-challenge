@@ -1,6 +1,7 @@
 import { ApiError } from '@core/http/http-client';
 import type { Quest } from '@domain/model/quest.model';
 import { useCreateQuest } from '@domain/quests/use-create-quest.use-case';
+import { useDeleteQuest } from '@domain/quests/use-delete-quest.use-case';
 import { useListQuests } from '@domain/quests/use-list-quests.use-case';
 import { useUpdateQuest } from '@domain/quests/use-update-quest.use-case';
 import { render, screen } from '@testing-library/react';
@@ -20,9 +21,14 @@ vi.mock('@domain/quests/use-update-quest.use-case', () => ({
   useUpdateQuest: vi.fn(),
 }));
 
+vi.mock('@domain/quests/use-delete-quest.use-case', () => ({
+  useDeleteQuest: vi.fn(),
+}));
+
 const useListQuestsMock = vi.mocked(useListQuests);
 const useCreateQuestMock = vi.mocked(useCreateQuest);
 const useUpdateQuestMock = vi.mocked(useUpdateQuest);
+const useDeleteQuestMock = vi.mocked(useDeleteQuest);
 
 const OPEN_QUEST: Quest = {
   id: 'q_1',
@@ -38,20 +44,26 @@ const refetch = vi.fn();
 const createQuest = vi.fn();
 const updateQuest = vi.fn();
 const updateQuestInList = vi.fn();
+const deleteQuest = vi.fn();
+const removeQuestFromList = vi.fn();
 
 beforeEach(() => {
   refetch.mockReset();
   createQuest.mockReset();
   updateQuest.mockReset();
   updateQuestInList.mockReset();
+  deleteQuest.mockReset();
+  removeQuestFromList.mockReset();
   useCreateQuestMock.mockReturnValue({ createQuest, isLoading: false, error: null });
   useUpdateQuestMock.mockReturnValue({ updateQuest, isLoading: false, error: null });
+  useDeleteQuestMock.mockReturnValue({ deleteQuest, isLoading: false, error: null });
   useListQuestsMock.mockReturnValue({
     quests: [OPEN_QUEST],
     isLoading: false,
     error: null,
     refetch,
     updateQuestInList,
+    removeQuestFromList,
   });
 });
 
@@ -120,6 +132,34 @@ describe('QuestBoardPage', () => {
 
     expect(updateQuestInList).toHaveBeenNthCalledWith(1, { ...OPEN_QUEST, status: 'in_progress' });
     expect(updateQuestInList).toHaveBeenLastCalledWith(OPEN_QUEST);
+  });
+
+  it('removes a quest after confirmation', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    deleteQuest.mockResolvedValue(OPEN_QUEST);
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Remover' }));
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(deleteQuest).toHaveBeenCalledWith(OPEN_QUEST.id);
+    expect(removeQuestFromList).toHaveBeenCalledWith(OPEN_QUEST.id);
+
+    confirmSpy.mockRestore();
+  });
+
+  it('does not remove a quest when confirmation is cancelled', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Remover' }));
+
+    expect(deleteQuest).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
   });
 
   it('creates a quest and refetches the board on success', async () => {
