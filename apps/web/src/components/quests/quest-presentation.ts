@@ -27,3 +27,20 @@ export const ADVANCE_LABEL: Partial<Record<QuestStatus, string>> = {
 export function formatQuestAge(createdAt: string): string {
   return `Aberta há ${formatDistanceToNow(new Date(createdAt), { locale: ptBR })}`;
 }
+
+export const LEVEL_TITLE_REQUIREMENTS = [
+  { requiredLevel: 1, title: 'Recruta' },
+  { requiredLevel: 2, title: 'Aventureiro' },
+  { requiredLevel: 3, title: 'Herói' },
+  { requiredLevel: 4, title: 'Lenda' },
+] as const;
+
+export const LEVEL_TITLES = LEVEL_TITLE_REQUIREMENTS.map(({ title }) => title);
+
+export function getLevelTitle(level: number): string {
+  const applicableTitles = LEVEL_TITLE_REQUIREMENTS.filter(({ requiredLevel }) => level >= requiredLevel).sort(
+    (first, second) => first.requiredLevel - second.requiredLevel,
+  );
+
+  return applicableTitles[applicableTitles.length - 1]?.title ?? LEVEL_TITLE_REQUIREMENTS[0]?.title ?? 'Recruta';
+}
