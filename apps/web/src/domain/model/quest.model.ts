@@ -9,6 +9,7 @@ export interface Quest {
   status: QuestStatus;
   difficulty: QuestDifficulty;
   xpReward: number;
+  dueDate: string | null;
   createdAt: string;
 }
 
@@ -16,6 +17,7 @@ export interface QuestInput {
   title: string;
   description: string;
   difficulty: QuestDifficulty;
+  dueDate?: string | null;
 }
 
 export interface QuestUpdateInput {
@@ -23,6 +25,7 @@ export interface QuestUpdateInput {
   description?: string;
   difficulty?: QuestDifficulty;
   status?: QuestStatus;
+  dueDate?: string | null;
 }
 
 export interface PageInfo {

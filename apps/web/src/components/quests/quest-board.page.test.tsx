@@ -37,6 +37,7 @@ const OPEN_QUEST: Quest = {
   status: 'open',
   difficulty: 'normal',
   xpReward: 25,
+  dueDate: null,
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
@@ -223,6 +224,7 @@ describe('QuestBoardPage', () => {
       title: OPEN_QUEST.title,
       description: OPEN_QUEST.description,
       difficulty: OPEN_QUEST.difficulty,
+      dueDate: OPEN_QUEST.dueDate,
     });
     expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ status: expect.anything() }));
     expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ id: expect.anything() }));
@@ -230,6 +232,26 @@ describe('QuestBoardPage', () => {
     expect(
       await screen.findByText(`Cópia de "${OPEN_QUEST.title}" criada. Modal de edição aberto.`),
     ).toBeInTheDocument();
+  });
+
+  it('copies the due date when duplicating a quest', async () => {
+    const user = userEvent.setup();
+    const questWithDueDate = { ...OPEN_QUEST, dueDate: '2026-12-31' };
+    useListQuestsMock.mockReturnValue({
+      quests: [questWithDueDate],
+      isLoading: false,
+      error: null,
+      refetch,
+      updateQuestInList,
+      removeQuestFromList,
+    });
+    createQuest.mockResolvedValue({ ...questWithDueDate, id: 'q_2' });
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Duplicar' }));
+
+    expect(createQuest).toHaveBeenCalledWith(expect.objectContaining({ dueDate: '2026-12-31' }));
   });
 
   it('opens the duplicate for editing after creating it', async () => {
@@ -259,6 +281,7 @@ describe('QuestBoardPage', () => {
       title: 'Nova missão criada',
       description: 'Descrição da missão',
       difficulty: 'normal',
+      dueDate: null,
     });
     expect(refetch).toHaveBeenCalledTimes(1);
     expect(await screen.findByText('Missão "Nova missão criada" criada.')).toBeInTheDocument();

@@ -3,6 +3,7 @@ import {
   RiAlertLine,
   RiArrowDropDownLine,
   RiArrowUpDownLine,
+  RiCalendarLine,
   RiChat1Line,
   RiCheckboxBlankLine,
   RiCheckboxFill,
@@ -35,6 +36,7 @@ import {
 
 export const FaIcon = {
   ArrowDropDown: RiArrowDropDownLine,
+  Calendar: RiCalendarLine,
   Circle: RiCircleLine,
   CircleFill: RiRadioButtonLine,
   Chat: RiChat1Line,

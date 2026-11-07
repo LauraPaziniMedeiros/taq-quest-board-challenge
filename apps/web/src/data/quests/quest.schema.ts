@@ -11,6 +11,7 @@ export const questSchema = z.object({
   status: questStatusSchema,
   difficulty: questDifficultySchema,
   xpReward: z.number(),
+  dueDate: z.iso.date().nullable(),
   createdAt: z.string(),
 }) satisfies ZodType<Quest>;
 

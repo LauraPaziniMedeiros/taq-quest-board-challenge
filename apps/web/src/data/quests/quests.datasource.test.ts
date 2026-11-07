@@ -8,6 +8,7 @@ const QUEST_RESPONSE = {
   status: 'open',
   difficulty: 'normal',
   xpReward: 25,
+  dueDate: null,
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
@@ -57,6 +58,16 @@ describe('listQuests', () => {
 
     await expect(listQuests()).rejects.toThrow();
   });
+
+  it('throws when a due date is not an ISO date', async () => {
+    mockFetchOnce({
+      nodes: [{ ...QUEST_RESPONSE, dueDate: '31/12/2026' }],
+      count: 1,
+      pageInfo: { limit: 10, offset: 0, hasNextPage: false, hasPreviousPage: false },
+    });
+
+    await expect(listQuests()).rejects.toThrow();
+  });
 });
 
 describe('createQuest', () => {
@@ -67,13 +78,19 @@ describe('createQuest', () => {
       title: 'Enfrentar o dragão',
       description: 'Derrote a besta',
       difficulty: 'high',
+      dueDate: '2026-12-31',
     });
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringMatching(/\/api\/v1\/quests$/),
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ title: 'Enfrentar o dragão', description: 'Derrote a besta', difficulty: 'high' }),
+        body: JSON.stringify({
+          title: 'Enfrentar o dragão',
+          description: 'Derrote a besta',
+          difficulty: 'high',
+          dueDate: '2026-12-31',
+        }),
       }),
     );
     expect(result).toEqual(QUEST_RESPONSE);
@@ -84,13 +101,13 @@ describe('updateQuest', () => {
   it('PATCHes the quest and returns the parsed quest', async () => {
     mockFetchOnce(QUEST_RESPONSE);
 
-    const result = await updateQuest('q_1', { title: 'Novo título' });
+    const result = await updateQuest('q_1', { title: 'Novo título', dueDate: null });
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringMatching(/\/api\/v1\/quests\/q_1$/),
       expect.objectContaining({
         method: 'PATCH',
-        body: JSON.stringify({ title: 'Novo título' }),
+        body: JSON.stringify({ title: 'Novo título', dueDate: null }),
       }),
     );
     expect(result).toEqual(QUEST_RESPONSE);

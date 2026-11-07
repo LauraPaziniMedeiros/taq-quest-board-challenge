@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { CreateQuestModal } from './create-quest-modal.component';
@@ -65,9 +65,11 @@ describe('CreateQuestModal', () => {
       title: 'Enfrentar o dragão',
       description: 'Derrote a besta',
       difficulty: 'normal',
+      dueDate: null,
     });
     expect(screen.getByLabelText('Título da missão')).toHaveValue('');
     expect(screen.getByLabelText('Descrição')).toHaveValue('');
+    expect(screen.getByLabelText('Prazo (opcional)')).toHaveValue('');
   });
 
   it('submits the selected difficulty and resets it to normal on success', async () => {
@@ -84,8 +86,45 @@ describe('CreateQuestModal', () => {
       title: 'Enfrentar o dragão',
       description: 'Derrote a besta',
       difficulty: 'high',
+      dueDate: null,
     });
     expect(screen.getByLabelText('Dificuldade')).toHaveValue('normal');
+  });
+
+  it('submits an optional due date and resets it on success', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(true);
+    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+
+    await user.type(screen.getByLabelText('Título da missão'), 'Enfrentar o dragão');
+    await user.type(screen.getByLabelText('Descrição'), 'Derrote a besta');
+    fireEvent.change(screen.getByLabelText('Prazo (opcional)'), { target: { value: '31/12/2026' } });
+    await user.click(screen.getByRole('button', { name: 'Publicar missão' }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      title: 'Enfrentar o dragão',
+      description: 'Derrote a besta',
+      difficulty: 'normal',
+      dueDate: '2026-12-31',
+    });
+    expect(screen.getByLabelText('Prazo (opcional)')).toHaveValue('');
+  });
+
+  it('rejects an invalid due date instead of submitting', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+
+    await user.type(screen.getByLabelText('Título da missão'), 'Enfrentar o dragão');
+    await user.type(screen.getByLabelText('Descrição'), 'Derrote a besta');
+    fireEvent.change(screen.getByLabelText('Prazo (opcional)'), { target: { value: '31/02/2026' } });
+    await user.click(screen.getByRole('button', { name: 'Publicar missão' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Prazo (opcional)')).toHaveFocus();
+    expect(screen.getByLabelText('Prazo (opcional)')).toHaveAccessibleDescription(
+      'Informe uma data válida (dd/mm/aaaa).',
+    );
   });
 
   it('keeps the form filled when the submission fails', async () => {

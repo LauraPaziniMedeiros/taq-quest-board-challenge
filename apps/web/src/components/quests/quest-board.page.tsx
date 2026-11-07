@@ -222,6 +222,7 @@ const QuestBoardPage = () => {
       title: quest.title,
       description: quest.description,
       difficulty: quest.difficulty,
+      dueDate: quest.dueDate,
     });
 
     if (created) {

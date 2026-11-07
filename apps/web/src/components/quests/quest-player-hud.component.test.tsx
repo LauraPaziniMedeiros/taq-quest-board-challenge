@@ -11,6 +11,7 @@ const QUESTS: Quest[] = [
     status: 'resolved',
     difficulty: 'easy',
     xpReward: 10,
+    dueDate: null,
     createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
@@ -20,6 +21,7 @@ const QUESTS: Quest[] = [
     status: 'open',
     difficulty: 'high',
     xpReward: 50,
+    dueDate: null,
     createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
@@ -29,6 +31,7 @@ const QUESTS: Quest[] = [
     status: 'resolved',
     difficulty: 'normal',
     xpReward: 25,
+    dueDate: null,
     createdAt: '2026-01-01T00:00:00.000Z',
   },
 ];
