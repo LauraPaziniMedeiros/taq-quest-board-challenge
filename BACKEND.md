@@ -76,5 +76,10 @@ Clean Architecture, one feature spanning three layers under `apps/rest-server/sr
 
 ## Quests feature
 
-The only feature implemented so far. `GET /quests` (optional `status` filter, paginated), `GET /quests/:id`,
-and `POST /quests` — see [`apps/rest-server/src/api/quests/`](apps/rest-server/src/api/quests/).
+The board's only feature. `GET /quests` (optional `status` filter, paginated), `GET /quests/:id`,
+`POST /quests`, `PATCH /quests/:id` and `DELETE /quests/:id` — see
+[`apps/rest-server/src/api/quests/`](apps/rest-server/src/api/quests/).
+
+Quests have an optional, nullable `due_date` column. The API exposes it as `dueDate` in the date-only
+`YYYY-MM-DD` format. `POST /quests` accepts an omitted or `null` value, and `PATCH /quests/:id` accepts
+`null` to clear an existing due date; invalid dates are rejected with `422`.

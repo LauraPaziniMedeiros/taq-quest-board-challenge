@@ -85,3 +85,8 @@ be removed from the board, with a confirmation step; removal soft-deletes the qu
 defaulting to `normal`); the XP reward is read-only, derived by the backend from the chosen
 difficulty. The XP bar reflects the sum of the XP rewards of resolved quests: every 100 XP is a new
 level, and the bar shows progress within the current level.
+
+The create and edit modals accept an optional due date through a native date input, which shows the
+browser calendar and can be left empty. Active quests whose due date is before today are highlighted on
+the card with an "Atrasada" badge; resolved quests are never highlighted. Dates are handled as
+`YYYY-MM-DD` strings to avoid timezone shifts.
