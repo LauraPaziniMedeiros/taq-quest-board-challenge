@@ -9,7 +9,7 @@ const documentation = {
     title: 'Quest Board API',
     version: '1.0.0',
   },
-  tags: [{ name: 'Quests' }],
+  tags: [{ name: 'Quests' }, { name: 'Tags' }],
 };
 
 // The docs UI loads its bundle from jsdelivr and boots with an inline script, so only this route gets a

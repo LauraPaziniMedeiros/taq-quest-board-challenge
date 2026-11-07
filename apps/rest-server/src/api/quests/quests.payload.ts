@@ -1,6 +1,7 @@
 import type { Paginated } from '@repo/core/pagination';
 import { type ZodType, z } from 'zod';
 import { PageRequest, PaginatedResponse } from '#api/common/common.payload.js';
+import { TagResponse } from '#api/tags/tags.payload.js';
 import {
   QUEST_DIFFICULTIES,
   QUEST_STATUSES,
@@ -9,6 +10,7 @@ import {
   type QuestUpdateInput,
 } from '#domain/model/quests.model.js';
 import type { ListQuestsInput } from '#domain/quests/list-quests.use-case.js';
+import { TAG_LIMIT } from '#domain/tags/tags.utils.js';
 
 export const QuestStatusEnum = z.enum(QUEST_STATUSES);
 export const QuestDifficultyEnum = z.enum(QUEST_DIFFICULTIES);
@@ -22,6 +24,7 @@ export const QuestResponse = z
     difficulty: QuestDifficultyEnum,
     xpReward: z.number().int().nonnegative(),
     dueDate: z.iso.date().nullable(),
+    tags: z.array(TagResponse),
     createdAt: z.date(),
   })
   .meta({ id: 'QuestResponse' }) satisfies ZodType<Quest>;
@@ -31,6 +34,7 @@ export const QuestRequest = z.object({
   description: z.string().trim().min(1).max(5000),
   difficulty: QuestDifficultyEnum.default('normal').catch('normal'),
   dueDate: z.iso.date().nullable().optional(),
+  tagIds: z.array(z.string().startsWith('t_')).max(TAG_LIMIT).optional(),
 }) satisfies ZodType<QuestInput>;
 
 export const QuestUpdateRequest = z.object({
@@ -39,6 +43,7 @@ export const QuestUpdateRequest = z.object({
   difficulty: QuestDifficultyEnum.optional(),
   status: QuestStatusEnum.optional(),
   dueDate: z.iso.date().nullable().optional(),
+  tagIds: z.array(z.string().startsWith('t_')).max(TAG_LIMIT).optional(),
 }) satisfies ZodType<QuestUpdateInput>;
 
 export const QuestParams = z.object({

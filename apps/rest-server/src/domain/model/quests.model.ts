@@ -1,3 +1,5 @@
+import type { Tag } from './tags.model.js';
+
 export const QUEST_STATUSES = ['open', 'in_progress', 'resolved'] as const;
 export const QUEST_DIFFICULTIES = ['easy', 'normal', 'high'] as const;
 
@@ -12,6 +14,7 @@ export interface Quest {
   difficulty: QuestDifficulty;
   xpReward: number;
   dueDate: string | null;
+  tags: Tag[];
   createdAt: Date;
 }
 
@@ -22,6 +25,7 @@ export interface QuestInput {
   description: string;
   difficulty: QuestDifficulty;
   dueDate?: string | null;
+  tagIds?: string[];
 }
 
 export interface QuestUpdateInput {
@@ -30,4 +34,5 @@ export interface QuestUpdateInput {
   difficulty?: QuestDifficulty;
   status?: QuestStatus;
   dueDate?: string | null;
+  tagIds?: string[];
 }
