@@ -90,3 +90,10 @@ The create and edit modals accept an optional due date through a native date inp
 browser calendar and can be left empty. Active quests whose due date is before today are highlighted on
 the card with an "Atrasada" badge; resolved quests are never highlighted. Dates are handled as
 `YYYY-MM-DD` strings to avoid timezone shifts.
+
+Tags are managed from the same create and edit modals through the shared `QuestTagsField`: pick existing
+tags, create a new tag (immediately persisted to the catalog) or delete a tag globally after confirmation.
+Each quest accepts up to 10 tags of up to 30 characters. Selected tags appear as chips on the modal and on
+the quest card. The board's tag filter is client-side and only offers tags attached to the loaded quests;
+selecting multiple tags matches quests with any of them (OR), while the tag and difficulty filters combine
+with AND.

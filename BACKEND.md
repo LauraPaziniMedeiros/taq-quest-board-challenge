@@ -83,3 +83,26 @@ The board's only feature. `GET /quests` (optional `status` filter, paginated), `
 Quests have an optional, nullable `due_date` column. The API exposes it as `dueDate` in the date-only
 `YYYY-MM-DD` format. `POST /quests` accepts an omitted or `null` value, and `PATCH /quests/:id` accepts
 `null` to clear an existing due date; invalid dates are rejected with `422`.
+
+## Tags feature
+
+Tags are a global catalog managed by `GET /tags`, `POST /tags` and `DELETE /tags/:id` — see
+[`apps/rest-server/src/api/tags/`](apps/rest-server/src/api/tags/). A quest references tags through the
+`quest_tag` join table, and every quest response includes its `tags` sorted by display name.
+
+```http
+POST /api/v1/tags
+Content-Type: application/json
+
+{ "name": "Dragão" }
+```
+
+Tag display names are stored exactly as entered after trimming. Identity is case-insensitive: the API
+stores a normalized name (`trim().normalize('NFC').toLocaleLowerCase('pt-BR')`) with a unique constraint,
+so `POST /tags` returns `409` with code `TAG_02` when the normalized name already exists. Tag names are
+limited to 30 characters.
+
+Quest create/update payloads accept an optional `tagIds` array (maximum 10 IDs). Invalid or unknown tag
+IDs are rejected with `422` and code `QST_02`. Sending `tagIds: []` to `PATCH /quests/:id` clears the
+quest's tags; omitting `tagIds` leaves them unchanged. Deleting a tag from the catalog cascades through
+`quest_tag`, removing it from every quest.
