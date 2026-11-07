@@ -15,7 +15,7 @@ export const style = tv({
     editButton:
       'font-secondary border-neutral-strong h-[40px] rounded-md border bg-neutral-xsoft text-neutral-strong text-[13px] font-semibold tracking-[0.06em] hover:brightness-110',
     removeButton:
-      'font-secondary border-feedback-danger h-[40px] rounded-md border bg-neutral-xsoft text-feedback-danger text-[13px] font-semibold tracking-[0.06em] hover:brightness-110',
+      'font-secondary border-feedback-danger bg-feedback-danger text-fixed-white h-[40px] rounded-md border text-[13px] font-semibold tracking-[0.06em] hover:brightness-110',
     completed: 'text-feedback-success-medium flex items-center gap-[6px] text-[15px] italic',
     completedIcon: 'text-sm',
   },
