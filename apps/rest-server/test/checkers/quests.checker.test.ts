@@ -1,18 +1,18 @@
 import { expect } from 'bun:test';
-import type { QuestEntity } from '@repo/db';
+import type { QuestEntity, TagEntity } from '@repo/db';
 import type { Quest, QuestDifficulty, QuestStatus } from '#domain/model/quests.model.js';
 import { calculateXpReward } from '#domain/quests/quests.utils.js';
 
-export function checkQuests(data: Quest[], entities: QuestEntity[]): void {
+export function checkQuests(data: Quest[], entities: QuestEntity[], tagsByEntity: TagEntity[][] = []): void {
   expect(data).toHaveLength(entities.length);
-  data.forEach((quest, index) => checkQuest(quest, entities[index]!));
+  data.forEach((quest, index) => checkQuest(quest, entities[index]!, tagsByEntity[index] ?? []));
 }
 
-export function checkQuest(data: Quest, entity: QuestEntity): void {
-  expect(normalizeCreatedAt(data)).toEqual(normalizeCreatedAt(mapQuestToCheck(entity)));
+export function checkQuest(data: Quest, entity: QuestEntity, tags: TagEntity[] = []): void {
+  expect(normalizeCreatedAt(data)).toEqual(normalizeCreatedAt(mapQuestToCheck(entity, tags)));
 }
 
-export function mapQuestToCheck(quest: QuestEntity): Quest {
+export function mapQuestToCheck(quest: QuestEntity, tags: TagEntity[] = []): Quest {
   const difficulty = quest.difficulty as QuestDifficulty;
 
   return {
@@ -23,6 +23,9 @@ export function mapQuestToCheck(quest: QuestEntity): Quest {
     difficulty,
     xpReward: calculateXpReward(difficulty),
     dueDate: quest.dueDate,
+    tags: tags
+      .map(tag => ({ id: tag.id, name: tag.name }))
+      .sort((first, second) => first.name.localeCompare(second.name, 'pt-BR')),
     createdAt: quest.createdAt,
   };
 }

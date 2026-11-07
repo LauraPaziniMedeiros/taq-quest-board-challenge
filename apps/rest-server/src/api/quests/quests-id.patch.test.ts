@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import { dbClient } from '@repo/db';
-import { clearDatabase, QuestsSeed } from '@repo/db/test';
+import { dbClient, questTagTable } from '@repo/db';
+import { clearDatabase, QuestTagsSeed, QuestsSeed, TagsSeed } from '@repo/db/test';
 import { API_PREFIX } from '#api/rest.config.js';
 import type { Quest, QuestUpdateInput } from '#domain/model/quests.model.js';
 import { QuestErrors } from '#domain/quests/quests.error.js';
@@ -131,6 +131,64 @@ describe('PATCH /quests/:id', () => {
     });
 
     checkErrors(response, [{ code: 'VAL_01', message: invalidDataMessage }]);
+  });
+
+  it('should replace the quest tags', async () => {
+    const questDb = await QuestsSeed.insert();
+    const urgent = await TagsSeed.insert({ name: 'Urgente', normalizedName: 'urgente' });
+    const alpha = await TagsSeed.insert({ name: 'Alpha', normalizedName: 'alpha' });
+
+    const response = await requestMaker.patch({
+      endpoint: `${API_PREFIX}/quests/${questDb.id}`,
+      body: { tagIds: [urgent.id, alpha.id] },
+    });
+
+    const updatedDb = (await dbClient.query.questTable.findFirst({ where: { id: questDb.id } }))!;
+    checkQuest(response.data, updatedDb, [urgent, alpha]);
+    expect(response.data.tags).toEqual([
+      { id: alpha.id, name: 'Alpha' },
+      { id: urgent.id, name: 'Urgente' },
+    ]);
+  });
+
+  it('should clear the quest tags when an empty list is sent', async () => {
+    const questDb = await QuestsSeed.insert();
+    const tag = await TagsSeed.insert({ name: 'Urgente', normalizedName: 'urgente' });
+    await QuestTagsSeed.attach(questDb, [tag]);
+
+    const response = await requestMaker.patch({
+      endpoint: `${API_PREFIX}/quests/${questDb.id}`,
+      body: { tagIds: [] },
+    });
+
+    expect(response.data.tags).toEqual([]);
+    expect(await dbClient.select().from(questTagTable)).toHaveLength(0);
+  });
+
+  it('should keep the quest tags when tagIds is omitted', async () => {
+    const questDb = await QuestsSeed.insert();
+    const tag = await TagsSeed.insert({ name: 'Urgente', normalizedName: 'urgente' });
+    await QuestTagsSeed.attach(questDb, [tag]);
+
+    const response = await requestMaker.patch({
+      endpoint: `${API_PREFIX}/quests/${questDb.id}`,
+      body: { title: 'Updated title' },
+    });
+
+    const updatedDb = (await dbClient.query.questTable.findFirst({ where: { id: questDb.id } }))!;
+    checkQuest(response.data, updatedDb, [tag]);
+  });
+
+  it('should give a validation error if a tag does not exist', async () => {
+    const questDb = await QuestsSeed.insert();
+
+    const response = await requestMaker.patch({
+      endpoint: `${API_PREFIX}/quests/${questDb.id}`,
+      body: { tagIds: ['t_missing'] },
+      expectedStatus: 422,
+    });
+
+    checkErrors(response, [QuestErrors.InvalidTags]);
   });
 
   it('should update several fields at once', async () => {

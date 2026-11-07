@@ -5,14 +5,38 @@ import { CreateQuestModal } from './create-quest-modal.component';
 
 describe('CreateQuestModal', () => {
   it('marks both fields as required', () => {
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={vi.fn()} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     expect(screen.getByLabelText('Título da missão')).toBeRequired();
     expect(screen.getByLabelText('Descrição')).toBeRequired();
   });
 
   it('defaults the difficulty to normal and only offers the valid options', () => {
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={vi.fn()} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     expect(screen.getByLabelText('Dificuldade')).toHaveValue('normal');
     expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['Fácil', 'Normal', 'Difícil']);
@@ -21,7 +45,19 @@ describe('CreateQuestModal', () => {
   it('explains which fields are missing instead of submitting', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     expect(screen.getByRole('button', { name: 'Publicar missão' })).toBeEnabled();
     await user.type(screen.getByLabelText('Título da missão'), '   ');
@@ -42,7 +78,19 @@ describe('CreateQuestModal', () => {
 
   it('clears the validation messages when the modal is closed', async () => {
     const user = userEvent.setup();
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={vi.fn()} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     await user.click(screen.getByRole('button', { name: 'Publicar missão' }));
     expect(screen.getByText('Informe o título da missão.')).toBeInTheDocument();
@@ -55,7 +103,19 @@ describe('CreateQuestModal', () => {
   it('submits the trimmed title and description, then clears the form on success', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(true);
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     await user.type(screen.getByLabelText('Título da missão'), '  Enfrentar o dragão  ');
     await user.type(screen.getByLabelText('Descrição'), '  Derrote a besta  ');
@@ -66,6 +126,7 @@ describe('CreateQuestModal', () => {
       description: 'Derrote a besta',
       difficulty: 'normal',
       dueDate: null,
+      tagIds: [],
     });
     expect(screen.getByLabelText('Título da missão')).toHaveValue('');
     expect(screen.getByLabelText('Descrição')).toHaveValue('');
@@ -75,7 +136,19 @@ describe('CreateQuestModal', () => {
   it('submits the selected difficulty and resets it to normal on success', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(true);
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     await user.type(screen.getByLabelText('Título da missão'), 'Enfrentar o dragão');
     await user.type(screen.getByLabelText('Descrição'), 'Derrote a besta');
@@ -87,6 +160,7 @@ describe('CreateQuestModal', () => {
       description: 'Derrote a besta',
       difficulty: 'high',
       dueDate: null,
+      tagIds: [],
     });
     expect(screen.getByLabelText('Dificuldade')).toHaveValue('normal');
   });
@@ -94,7 +168,19 @@ describe('CreateQuestModal', () => {
   it('submits an optional due date and resets it on success', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(true);
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     await user.type(screen.getByLabelText('Título da missão'), 'Enfrentar o dragão');
     await user.type(screen.getByLabelText('Descrição'), 'Derrote a besta');
@@ -106,6 +192,7 @@ describe('CreateQuestModal', () => {
       description: 'Derrote a besta',
       difficulty: 'normal',
       dueDate: '2026-12-31',
+      tagIds: [],
     });
     expect(screen.getByLabelText('Prazo (opcional)')).toHaveValue('');
   });
@@ -113,7 +200,19 @@ describe('CreateQuestModal', () => {
   it('rejects an invalid due date instead of submitting', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     await user.type(screen.getByLabelText('Título da missão'), 'Enfrentar o dragão');
     await user.type(screen.getByLabelText('Descrição'), 'Derrote a besta');
@@ -130,7 +229,19 @@ describe('CreateQuestModal', () => {
   it('keeps the form filled when the submission fails', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(false);
-    render(<CreateQuestModal opened onClose={vi.fn()} onSubmit={onSubmit} isLoading={false} />);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
 
     await user.type(screen.getByLabelText('Título da missão'), 'Enfrentar o dragão');
     await user.type(screen.getByLabelText('Descrição'), 'Derrote a besta');
@@ -146,10 +257,68 @@ describe('CreateQuestModal', () => {
         onClose={vi.fn()}
         onSubmit={vi.fn()}
         isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
         errorMessage="Falha ao publicar a missão"
       />,
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('Falha ao publicar a missão');
+  });
+});
+
+describe('CreateQuestModal tags', () => {
+  it('submits the selected tag ids', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(true);
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        isLoading={false}
+        tags={[{ id: 't_1', name: 'Dragão' }]}
+        tagsLoading={false}
+        isTagMutating={false}
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('Título da missão'), 'Caçar');
+    await user.type(screen.getByLabelText('Descrição'), 'Encontre a fera');
+    await user.click(screen.getByRole('checkbox', { name: 'Dragão' }));
+    await user.click(screen.getByRole('button', { name: 'Publicar missão' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Caçar', description: 'Encontre a fera', tagIds: ['t_1'] }),
+    );
+  });
+
+  it('does not submit while a tag mutation is in progress', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(
+      <CreateQuestModal
+        opened
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        isLoading={false}
+        tags={[]}
+        tagsLoading={false}
+        isTagMutating
+        onCreateTag={vi.fn()}
+        onDeleteTag={vi.fn()}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('Título da missão'), 'Caçar');
+    await user.type(screen.getByLabelText('Descrição'), 'Encontre a fera');
+    await user.click(screen.getByRole('button', { name: 'Publicar missão' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

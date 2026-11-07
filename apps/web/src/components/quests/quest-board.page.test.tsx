@@ -4,6 +4,7 @@ import { useCreateQuest } from '@domain/quests/use-create-quest.use-case';
 import { useDeleteQuest } from '@domain/quests/use-delete-quest.use-case';
 import { useListQuests } from '@domain/quests/use-list-quests.use-case';
 import { useUpdateQuest } from '@domain/quests/use-update-quest.use-case';
+import { useTags } from '@domain/tags/use-tags.use-case';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -25,10 +26,15 @@ vi.mock('@domain/quests/use-delete-quest.use-case', () => ({
   useDeleteQuest: vi.fn(),
 }));
 
+vi.mock('@domain/tags/use-tags.use-case', () => ({
+  useTags: vi.fn(),
+}));
+
 const useListQuestsMock = vi.mocked(useListQuests);
 const useCreateQuestMock = vi.mocked(useCreateQuest);
 const useUpdateQuestMock = vi.mocked(useUpdateQuest);
 const useDeleteQuestMock = vi.mocked(useDeleteQuest);
+const useTagsMock = vi.mocked(useTags);
 
 const OPEN_QUEST: Quest = {
   id: 'q_1',
@@ -38,6 +44,7 @@ const OPEN_QUEST: Quest = {
   difficulty: 'normal',
   xpReward: 25,
   dueDate: null,
+  tags: [],
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
@@ -47,6 +54,9 @@ const updateQuest = vi.fn();
 const updateQuestInList = vi.fn();
 const deleteQuest = vi.fn();
 const removeQuestFromList = vi.fn();
+const createTag = vi.fn();
+const deleteTag = vi.fn();
+const refetchTags = vi.fn();
 
 beforeEach(() => {
   window.localStorage.removeItem('quest-board-theme');
@@ -57,9 +67,25 @@ beforeEach(() => {
   updateQuestInList.mockReset();
   deleteQuest.mockReset();
   removeQuestFromList.mockReset();
+  createTag.mockReset();
+  deleteTag.mockReset();
+  refetchTags.mockReset();
   useCreateQuestMock.mockReturnValue({ createQuest, isLoading: false, error: null });
   useUpdateQuestMock.mockReturnValue({ updateQuest, isLoading: false, error: null });
   useDeleteQuestMock.mockReturnValue({ deleteQuest, isLoading: false, error: null });
+  useTagsMock.mockReturnValue({
+    tags: [],
+    isLoading: false,
+    error: null,
+    isMutating: false,
+    mutationError: null,
+    refetch: refetchTags,
+    createTag,
+    deleteTag,
+    addTagLocally: vi.fn(),
+    removeTagLocally: vi.fn(),
+    clearMutationError: vi.fn(),
+  });
   useListQuestsMock.mockReturnValue({
     quests: [OPEN_QUEST],
     isLoading: false,
@@ -193,7 +219,7 @@ describe('QuestBoardPage', () => {
     await user.click(screen.getByRole('button', { name: 'Remover' }));
 
     expect(confirmSpy).toHaveBeenCalledWith(
-      `Remover a missão "${RESOLVED_QUEST.title}"? O XP dela (100 XP) não será descontado da sua pontuação.`,
+      `Remover a missão "${RESOLVED_QUEST.title}"? O XP dela (100 XP) será descontado da sua pontuação.`,
     );
     expect(await screen.findByText(/O XP dela não será mais contado no quadro/)).toBeInTheDocument();
 
@@ -225,6 +251,7 @@ describe('QuestBoardPage', () => {
       description: OPEN_QUEST.description,
       difficulty: OPEN_QUEST.difficulty,
       dueDate: OPEN_QUEST.dueDate,
+      tagIds: [],
     });
     expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ status: expect.anything() }));
     expect(createQuest).not.toHaveBeenCalledWith(expect.objectContaining({ id: expect.anything() }));
@@ -282,6 +309,7 @@ describe('QuestBoardPage', () => {
       description: 'Descrição da missão',
       difficulty: 'normal',
       dueDate: null,
+      tagIds: [],
     });
     expect(refetch).toHaveBeenCalledTimes(1);
     expect(await screen.findByText('Missão "Nova missão criada" criada.')).toBeInTheDocument();
@@ -322,5 +350,113 @@ describe('QuestBoardPage', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Normal' }));
 
     expect(await screen.findByText('Filtro de dificuldade aplicado: Normal. Mostrando 1 missões.')).toBeInTheDocument();
+  });
+});
+
+describe('QuestBoardPage tags', () => {
+  const DRAGON = { id: 't_1', name: 'Dragão' };
+  const ARCHER = { id: 't_2', name: 'Arqueiro' };
+
+  function mockQuestList(quests: Quest[]) {
+    useListQuestsMock.mockReturnValue({
+      quests,
+      isLoading: false,
+      error: null,
+      refetch,
+      updateQuestInList,
+      removeQuestFromList,
+    });
+  }
+
+  it('copies the quest tags when duplicating', async () => {
+    const user = userEvent.setup();
+    const taggedQuest = { ...OPEN_QUEST, tags: [DRAGON] };
+    mockQuestList([taggedQuest]);
+    createQuest.mockResolvedValue({ ...taggedQuest, id: 'q_2' });
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Duplicar' }));
+
+    expect(createQuest).toHaveBeenCalledWith(expect.objectContaining({ tagIds: [DRAGON.id] }));
+  });
+
+  it('derives the tag filter from the loaded quests, not the whole catalog', () => {
+    const WITCH = { id: 't_3', name: 'Bruxa' };
+    useTagsMock.mockReturnValue({
+      tags: [DRAGON, WITCH],
+      isLoading: false,
+      error: null,
+      isMutating: false,
+      mutationError: null,
+      refetch: refetchTags,
+      createTag,
+      deleteTag,
+      addTagLocally: vi.fn(),
+      removeTagLocally: vi.fn(),
+      clearMutationError: vi.fn(),
+    });
+    mockQuestList([{ ...OPEN_QUEST, tags: [DRAGON] }]);
+
+    render(<QuestBoardPage />);
+
+    expect(screen.getByRole('checkbox', { name: 'Dragão' })).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Bruxa' })).not.toBeInTheDocument();
+  });
+
+  it('filters quests by any of the selected tags and announces the result', async () => {
+    const user = userEvent.setup();
+    const dragonQuest = { ...OPEN_QUEST, id: 'q_1', title: 'Caçar dragão', tags: [DRAGON] };
+    const archerQuest = { ...OPEN_QUEST, id: 'q_2', title: 'Ajudar arqueiro', tags: [ARCHER] };
+    mockQuestList([dragonQuest, archerQuest]);
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('checkbox', { name: 'Dragão' }));
+    expect(screen.getByText('Caçar dragão')).toBeInTheDocument();
+    expect(screen.queryByText('Ajudar arqueiro')).not.toBeInTheDocument();
+    expect(await screen.findByText('Filtro de tags aplicado: Dragão. Mostrando 1 missões.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: 'Arqueiro' }));
+    expect(screen.getByText('Caçar dragão')).toBeInTheDocument();
+    expect(screen.getByText('Ajudar arqueiro')).toBeInTheDocument();
+    expect(await screen.findByText(/Filtro de tags aplicado: .*Mostrando 2 missões\./)).toBeInTheDocument();
+  });
+
+  it('combines tag and difficulty filters with AND', async () => {
+    const user = userEvent.setup();
+    const normalQuest = { ...OPEN_QUEST, id: 'q_1', title: 'Caçar dragão', tags: [DRAGON] };
+    const hardQuest = {
+      ...OPEN_QUEST,
+      id: 'q_2',
+      title: 'Enfrentar dragão ancião',
+      difficulty: 'high' as const,
+      tags: [DRAGON],
+    };
+    mockQuestList([normalQuest, hardQuest]);
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('checkbox', { name: 'Dragão' }));
+    expect(screen.getByText('Enfrentar dragão ancião')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: 'Normal' }));
+
+    expect(screen.getByText('Caçar dragão')).toBeInTheDocument();
+    expect(screen.queryByText('Enfrentar dragão ancião')).not.toBeInTheDocument();
+  });
+
+  it('clears every selected tag filter', async () => {
+    const user = userEvent.setup();
+    const taggedQuest = { ...OPEN_QUEST, tags: [DRAGON] };
+    mockQuestList([taggedQuest]);
+
+    render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('checkbox', { name: 'Dragão' }));
+    await user.click(screen.getByRole('button', { name: 'Limpar tags' }));
+
+    expect(screen.getByRole('checkbox', { name: 'Dragão' })).not.toBeChecked();
+    expect(await screen.findByText('Filtro de tags removido. Mostrando 1 missões.')).toBeInTheDocument();
   });
 });

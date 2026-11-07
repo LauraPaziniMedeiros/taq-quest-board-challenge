@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, it } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { GENERIC_ERROR_MESSAGE } from '@repo/core/error';
-import { clearDatabase, QuestsSeed } from '@repo/db/test';
+import { clearDatabase, QuestTagsSeed, QuestsSeed, TagsSeed } from '@repo/db/test';
 import { API_PREFIX } from '#api/rest.config.js';
 import type { Quest } from '#domain/model/quests.model.js';
 import { QuestErrors } from '#domain/quests/quests.error.js';
@@ -26,6 +26,17 @@ describe('GET /quests/:id', () => {
     const response = await requestMaker.get({ endpoint: `${API_PREFIX}/quests/${questDb.id}` });
 
     checkQuest(response.data, questDb);
+  });
+
+  it('should include the quest tags', async () => {
+    const questDb = await QuestsSeed.insert();
+    const tag = await TagsSeed.insert({ name: 'Urgente', normalizedName: 'urgente' });
+    await QuestTagsSeed.attach(questDb, [tag]);
+
+    const response = await requestMaker.get({ endpoint: `${API_PREFIX}/quests/${questDb.id}` });
+
+    checkQuest(response.data, questDb, [tag]);
+    expect(response.data.tags).toEqual([{ id: tag.id, name: 'Urgente' }]);
   });
 
   it('should give a 404 error if the quest does not exist', async () => {

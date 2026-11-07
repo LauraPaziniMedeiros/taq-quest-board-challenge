@@ -9,6 +9,7 @@ const QUEST_RESPONSE = {
   difficulty: 'normal',
   xpReward: 25,
   dueDate: null,
+  tags: [],
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 

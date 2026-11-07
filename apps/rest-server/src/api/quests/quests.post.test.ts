@@ -1,8 +1,9 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, mock, spyOn } from 'bun:test';
-import { DatabaseIdGenerator, dbClient } from '@repo/db';
-import { clearDatabase } from '@repo/db/test';
+import { DatabaseIdGenerator, dbClient, questTagTable } from '@repo/db';
+import { clearDatabase, TagsSeed } from '@repo/db/test';
 import { API_PREFIX } from '#api/rest.config.js';
 import type { Quest, QuestDifficulty, QuestInput } from '#domain/model/quests.model.js';
+import { QuestErrors } from '#domain/quests/quests.error.js';
 import { checkErrors } from '#test/checkers/checker.test.js';
 import { checkQuest } from '#test/checkers/quests.checker.test.js';
 import { ValidationError } from '#test/checkers/validation.error.test.js';
@@ -17,7 +18,10 @@ describe('POST /quests', () => {
 
   beforeAll(() => {
     requestMaker = new RequestMaker();
-    spyOn(DatabaseIdGenerator, 'generate').mockReturnValue(questId);
+    let generatedId = 0;
+    spyOn(DatabaseIdGenerator, 'generate').mockImplementation(prefix =>
+      prefix === 'q_' ? questId : `${prefix}${++generatedId}`,
+    );
   });
 
   afterEach(async () => {
@@ -71,6 +75,51 @@ describe('POST /quests', () => {
 
   it('should give a validation error if the due date is invalid', async () => {
     const body = { title: 'Bad date', description: 'desc', dueDate: '2026-13-40' } as any;
+    const response = await requestMaker.post({ endpoint, body, expectedStatus: 422 });
+
+    checkErrors(response, [{ code: 'VAL_01', message: invalidDataMessage }]);
+  });
+
+  it('should create a quest with tags', async () => {
+    const urgent = await TagsSeed.insert({ name: 'Urgente', normalizedName: 'urgente' });
+    const alpha = await TagsSeed.insert({ name: 'Alpha', normalizedName: 'alpha' });
+    const body = {
+      title: 'Tagged quest',
+      description: 'desc',
+      tagIds: [urgent.id, alpha.id, urgent.id],
+    };
+
+    const response = await requestMaker.post({ endpoint, body });
+
+    const questDb = (await dbClient.query.questTable.findFirst({ where: { id: questId } }))!;
+    checkQuest(response.data, questDb, [urgent, alpha]);
+    expect(response.data.tags).toEqual([
+      { id: alpha.id, name: 'Alpha' },
+      { id: urgent.id, name: 'Urgente' },
+    ]);
+    const associations = await dbClient.select().from(questTagTable);
+    expect(associations).toHaveLength(2);
+  });
+
+  it('should give a validation error if a tag does not exist', async () => {
+    const body = {
+      title: 'Missing tag',
+      description: 'desc',
+      tagIds: ['t_missing'],
+    };
+
+    const response = await requestMaker.post({ endpoint, body, expectedStatus: 422 });
+
+    checkErrors(response, [QuestErrors.InvalidTags]);
+  });
+
+  it('should give a validation error if a tag id is malformed', async () => {
+    const body = {
+      title: 'Bad tag',
+      description: 'desc',
+      tagIds: ['not-a-tag'],
+    };
+
     const response = await requestMaker.post({ endpoint, body, expectedStatus: 422 });
 
     checkErrors(response, [{ code: 'VAL_01', message: invalidDataMessage }]);

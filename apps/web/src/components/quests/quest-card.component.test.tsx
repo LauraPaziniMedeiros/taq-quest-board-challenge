@@ -11,6 +11,7 @@ const QUEST: Quest = {
   difficulty: 'normal',
   xpReward: 25,
   dueDate: null,
+  tags: [],
   createdAt: '2026-01-01T00:00:00.000Z',
 };
 
@@ -54,5 +55,27 @@ describe('QuestCard due date', () => {
     renderCard(QUEST);
 
     expect(screen.queryByText(/Prazo:/)).not.toBeInTheDocument();
+  });
+});
+
+describe('QuestCard tags', () => {
+  it('lists the quest tags', () => {
+    renderCard({
+      ...QUEST,
+      tags: [
+        { id: 't_1', name: 'Dragão' },
+        { id: 't_2', name: 'Arqueiro' },
+      ],
+    });
+
+    const tags = screen.getByLabelText('Tags');
+    expect(tags).toHaveTextContent('Dragão');
+    expect(tags).toHaveTextContent('Arqueiro');
+  });
+
+  it('does not render the tag list when the quest has no tags', () => {
+    renderCard(QUEST);
+
+    expect(screen.queryByLabelText('Tags')).not.toBeInTheDocument();
   });
 });

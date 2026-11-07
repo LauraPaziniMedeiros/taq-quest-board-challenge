@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import type { Paginated } from '@repo/core/pagination';
 import { dbClient } from '@repo/db';
-import { clearDatabase, QuestsSeed } from '@repo/db/test';
+import { clearDatabase, QuestTagsSeed, QuestsSeed, TagsSeed } from '@repo/db/test';
 import { API_PREFIX } from '#api/rest.config.js';
 import type { Quest } from '#domain/model/quests.model.js';
 import { QuestErrors } from '#domain/quests/quests.error.js';
@@ -32,6 +32,16 @@ describe('DELETE /quests/:id', () => {
     expect(deletedDb.deletedAt).not.toBeNull();
     checkQuest(response.data, deletedDb);
     expect(response.data.xpReward).toBe(50);
+  });
+
+  it('should return the quest tags when removing a quest', async () => {
+    const questDb = await QuestsSeed.insert();
+    const tag = await TagsSeed.insert({ name: 'Urgente', normalizedName: 'urgente' });
+    await QuestTagsSeed.attach(questDb, [tag]);
+
+    const response = await requestMaker.delete({ endpoint: `${API_PREFIX}/quests/${questDb.id}` });
+
+    checkQuest(response.data, questDb, [tag]);
   });
 
   it('should make the quest unavailable afterwards', async () => {
