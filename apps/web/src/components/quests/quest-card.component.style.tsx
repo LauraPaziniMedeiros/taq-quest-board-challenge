@@ -7,6 +7,9 @@ export const style = tv({
     description: 'font-primary text-tinta-2 m-0 text-[15px] italic',
     tags: 'flex flex-wrap gap-[6px]',
     difficulty: 'border-background-strong bg-neutral-xsoft text-tinta-2 rounded-full border px-[10px] py-[2px] text-sm',
+    dueDate: 'border-neutral-soft bg-neutral-xxsoft text-tinta-2 rounded-full border px-[10px] py-[2px] text-sm',
+    overdueBadge:
+      'border-feedback-danger bg-feedback-danger text-fixed-white rounded-full border px-[10px] py-[2px] text-sm font-semibold',
     footer: 'border-neutral-soft flex items-center justify-between gap-sm border-t border-dashed pt-sm',
     meta: 'text-tinta-2 flex items-center gap-xs text-[15px]',
     xpIcon: 'text-ouro-escuro text-sm',
@@ -20,6 +23,11 @@ export const style = tv({
     completedIcon: 'text-sm',
   },
   variants: {
+    overdue: {
+      true: {
+        card: 'border-feedback-danger bg-feedback-warning-soft',
+      },
+    },
     columnStatus: {
       open: {
         advanceButton:

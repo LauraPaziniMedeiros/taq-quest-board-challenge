@@ -2,7 +2,13 @@ import { FaIcon } from '@atomic/atm.fa-icon';
 import type { Quest, QuestStatus } from '@domain/model/quest.model';
 import { useState } from 'react';
 import { style } from './quest-card.component.style';
-import { ADVANCE_LABEL, QUEST_DIFFICULTY_LABEL, formatQuestAge } from './quest-presentation';
+import {
+  ADVANCE_LABEL,
+  QUEST_DIFFICULTY_LABEL,
+  formatQuestAge,
+  formatQuestDueDate,
+  isQuestPastDue,
+} from './quest-presentation';
 
 interface QuestCardProps {
   quest: Quest;
@@ -16,7 +22,8 @@ interface QuestCardProps {
 export function QuestCard(props: QuestCardProps) {
   const { quest, columnStatus, onAdvance, onEdit, onRemove, onDuplicate } = props;
   const advanceLabel = ADVANCE_LABEL[columnStatus];
-  const classes = style({ columnStatus });
+  const isPastDue = isQuestPastDue(quest);
+  const classes = style({ columnStatus, overdue: isPastDue });
   const [isDragging, setIsDragging] = useState(false);
 
   return (
@@ -36,6 +43,8 @@ export function QuestCard(props: QuestCardProps) {
       <p className={classes.description()}>{quest.description}</p>
       <div className={classes.tags()}>
         <span className={classes.difficulty()}>{QUEST_DIFFICULTY_LABEL[quest.difficulty]}</span>
+        {quest.dueDate && <span className={classes.dueDate()}>Prazo: {formatQuestDueDate(quest.dueDate)}</span>}
+        {isPastDue && <span className={classes.overdueBadge()}>Atrasada</span>}
       </div>
       <div className={classes.footer()}>
         <span className={classes.meta()}>
@@ -56,7 +65,7 @@ export function QuestCard(props: QuestCardProps) {
           onClick={() => {
             const message =
               quest.status === 'resolved'
-                ? `Remover a missão "${quest.title}"? O XP dela (${quest.xpReward} XP) não será descontado da sua pontuação.`
+                ? `Remover a missão "${quest.title}"? O XP dela (${quest.xpReward} XP) será descontado da sua pontuação.`
                 : `Remover a missão "${quest.title}"?`;
             if (window.confirm(message)) {
               onRemove(quest);
