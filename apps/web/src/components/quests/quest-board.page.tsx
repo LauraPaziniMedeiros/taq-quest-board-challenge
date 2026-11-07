@@ -14,7 +14,7 @@ import { useCreateQuest } from '@domain/quests/use-create-quest.use-case';
 import { useDeleteQuest } from '@domain/quests/use-delete-quest.use-case';
 import { useListQuests } from '@domain/quests/use-list-quests.use-case';
 import { useUpdateQuest } from '@domain/quests/use-update-quest.use-case';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CreateQuestModal } from './create-quest-modal.component';
 import { EditQuestModal } from './edit-quest-modal.component';
 import { QuestBoardHeader } from './quest-board-header.component';
@@ -30,6 +30,7 @@ const SORT_LABELS: Record<'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc',
 };
 
 const QuestBoardPage = () => {
+  const [isDarkMode, setIsDarkMode] = useState(() => window.localStorage.getItem('quest-board-theme') === 'dark');
   const {
     quests,
     isLoading,
@@ -54,6 +55,11 @@ const QuestBoardPage = () => {
   });
   // Only the first load replaces the board with a spinner; refetches keep the current columns on screen.
   const isInitialLoading = isLoading && quests.length === 0;
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    window.localStorage.setItem('quest-board-theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
 
   const announce = useCallback((message: string) => {
     setAnnouncement(previous => ({ id: previous.id + 1, message }));
@@ -262,7 +268,11 @@ const QuestBoardPage = () => {
         {announcement.message}
       </output>
       <Col sm={12} className="mb-lg">
-        <QuestBoardHeader onCreateClick={() => setIsCreateModalOpen(true)} />
+        <QuestBoardHeader
+          onCreateClick={() => setIsCreateModalOpen(true)}
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(previous => !previous)}
+        />
       </Col>
 
       <Col sm={12} className="mb-lg">

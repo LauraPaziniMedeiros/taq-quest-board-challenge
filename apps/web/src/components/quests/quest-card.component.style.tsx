@@ -21,8 +21,14 @@ export const style = tv({
   },
   variants: {
     columnStatus: {
-      open: { advanceButton: 'bg-neutral-strong text-ficha-nome' },
-      in_progress: { advanceButton: 'bg-primary-medium text-neutral-strong' },
+      open: {
+        advanceButton:
+          'bg-neutral-strong text-ficha-nome dark:border-neutral-medium dark:bg-secondary-strong dark:text-neutral-strong',
+      },
+      in_progress: {
+        advanceButton:
+          'bg-primary-medium text-neutral-strong dark:border-neutral-medium dark:bg-secondary-strong dark:text-primary-soft',
+      },
       resolved: {},
     },
   },

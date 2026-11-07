@@ -10,3 +10,7 @@
 .dark {
   color: #cbd5e1;
 }
+
+.dark .quest-xp-progress {
+  background-color: var(--color-background-medium);
+}

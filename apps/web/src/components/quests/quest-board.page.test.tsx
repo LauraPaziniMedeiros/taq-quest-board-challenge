@@ -48,6 +48,8 @@ const deleteQuest = vi.fn();
 const removeQuestFromList = vi.fn();
 
 beforeEach(() => {
+  window.localStorage.removeItem('quest-board-theme');
+  document.documentElement.classList.remove('dark');
   refetch.mockReset();
   createQuest.mockReset();
   updateQuest.mockReset();
@@ -106,6 +108,22 @@ describe('QuestBoardPage', () => {
 
     expect(screen.getByText(OPEN_QUEST.title)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Pergaminhos Novos' })).toBeInTheDocument();
+  });
+
+  it('toggles and persists the board theme', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<QuestBoardPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Ativar tema escuro' }));
+
+    expect(document.documentElement).toHaveClass('dark');
+    expect(window.localStorage.getItem('quest-board-theme')).toBe('dark');
+
+    unmount();
+    render(<QuestBoardPage />);
+
+    expect(document.documentElement).toHaveClass('dark');
+    expect(screen.getByRole('button', { name: 'Ativar tema claro' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('updates a quest status optimistically when advanced', async () => {

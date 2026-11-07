@@ -107,7 +107,10 @@ export const QuestColumn = ({
           </select>
           <span
             className="font-secondary flex h-[28px] min-w-[28px] items-center justify-center rounded-full px-sm text-[13px] font-bold"
-            style={{ background: 'var(--color-neutral-strong)', color: 'var(--color-primary-soft)' }}>
+            style={{
+              background: 'var(--quest-counter-background)',
+              color: 'var(--quest-counter-foreground)',
+            }}>
             {quests.length}
           </span>
         </div>

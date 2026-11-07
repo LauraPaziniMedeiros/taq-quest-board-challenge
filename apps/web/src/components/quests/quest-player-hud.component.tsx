@@ -42,10 +42,10 @@ export const QuestPlayerHud = ({ quests, totalXp }: QuestPlayerHudProps = {}) =>
     <div
       className="flex flex-wrap items-center gap-x-[28px] gap-y-[20px] rounded-[6px] border px-[22px] py-[16px]"
       style={{
-        background: 'var(--color-neutral-strong)',
+        background: 'var(--quest-hud-background)',
         borderColor: 'var(--color-primary-strong)',
         color: 'var(--ficha-texto)',
-        boxShadow: 'inset 0 0 0 4px var(--color-neutral-strong), inset 0 0 0 5px var(--ficha-borda)',
+        boxShadow: 'inset 0 0 0 4px var(--quest-hud-background), inset 0 0 0 5px var(--ficha-borda)',
       }}>
       <div className="flex items-center gap-[14px]">
         <div
@@ -95,8 +95,8 @@ export const QuestPlayerHud = ({ quests, totalXp }: QuestPlayerHudProps = {}) =>
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={currentLevelXp}
-          className="h-[12px] overflow-hidden rounded-[6px] border"
-          style={{ background: 'var(--ficha-xp-trilho)', borderColor: 'var(--ficha-borda)' }}>
+          className="quest-xp-progress bg-[var(--ficha-xp-trilho)] h-[12px] overflow-hidden rounded-[6px] border"
+          style={{ borderColor: 'var(--ficha-borda)' }}>
           <div className="h-full" style={{ width: `${currentLevelXp}%`, background: 'var(--color-primary-medium)' }} />
         </div>
       </div>
