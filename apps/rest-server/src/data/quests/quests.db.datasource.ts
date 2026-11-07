@@ -25,7 +25,7 @@ export const QuestsDbDatasource = {
 
     const [quest] = await dbClient
       .insert(questTable)
-      .values({ ...input, id, createdAt })
+      .values({ ...input, dueDate: input.dueDate ?? null, id, createdAt })
       .returning();
 
     return toQuestData(quest!);
@@ -83,6 +83,7 @@ function toQuestData(entity: QuestEntity): QuestData {
     description: entity.description,
     status: StatusColumn.parse(entity.status),
     difficulty: DifficultyColumn.parse(entity.difficulty),
+    dueDate: entity.dueDate,
     createdAt: entity.createdAt,
   };
 }

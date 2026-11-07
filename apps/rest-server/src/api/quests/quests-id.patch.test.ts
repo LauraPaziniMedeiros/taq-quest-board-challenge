@@ -78,6 +78,61 @@ describe('PATCH /quests/:id', () => {
     checkQuest(response.data, updatedDb);
   });
 
+  it('should update the due date', async () => {
+    const questDb = await QuestsSeed.insert({ dueDate: null });
+    const body = { dueDate: '2026-12-31' };
+
+    const response = await requestMaker.patch({
+      endpoint: `${API_PREFIX}/quests/${questDb.id}`,
+      body,
+    });
+
+    const updatedDb = (await dbClient.query.questTable.findFirst({ where: { id: questDb.id } }))!;
+    expect(updatedDb.dueDate).toBe(body.dueDate);
+    expect(response.data.dueDate).toBe(body.dueDate);
+    checkQuest(response.data, updatedDb);
+  });
+
+  it('should clear the due date when null is sent', async () => {
+    const questDb = await QuestsSeed.insert({ dueDate: '2026-12-31' });
+
+    const response = await requestMaker.patch({
+      endpoint: `${API_PREFIX}/quests/${questDb.id}`,
+      body: { dueDate: null },
+    });
+
+    const updatedDb = (await dbClient.query.questTable.findFirst({ where: { id: questDb.id } }))!;
+    expect(updatedDb.dueDate).toBeNull();
+    expect(response.data.dueDate).toBeNull();
+    checkQuest(response.data, updatedDb);
+  });
+
+  it('should keep the due date when it is omitted', async () => {
+    const questDb = await QuestsSeed.insert({ dueDate: '2026-12-31' });
+
+    const response = await requestMaker.patch({
+      endpoint: `${API_PREFIX}/quests/${questDb.id}`,
+      body: { title: 'Updated title' },
+    });
+
+    const updatedDb = (await dbClient.query.questTable.findFirst({ where: { id: questDb.id } }))!;
+    expect(updatedDb.dueDate).toBe('2026-12-31');
+    expect(response.data.dueDate).toBe('2026-12-31');
+    checkQuest(response.data, updatedDb);
+  });
+
+  it('should give a validation error if the due date is invalid', async () => {
+    const questDb = await QuestsSeed.insert();
+
+    const response = await requestMaker.patch({
+      endpoint: `${API_PREFIX}/quests/${questDb.id}`,
+      body: { dueDate: '31/12/2026' } as any,
+      expectedStatus: 422,
+    });
+
+    checkErrors(response, [{ code: 'VAL_01', message: invalidDataMessage }]);
+  });
+
   it('should update several fields at once', async () => {
     const questDb = await QuestsSeed.insert();
     const body = { title: 'Novo título', description: 'Nova descrição', difficulty: 'easy' as const };

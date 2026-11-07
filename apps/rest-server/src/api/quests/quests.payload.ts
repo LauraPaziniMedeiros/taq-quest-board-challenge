@@ -21,6 +21,7 @@ export const QuestResponse = z
     status: QuestStatusEnum,
     difficulty: QuestDifficultyEnum,
     xpReward: z.number().int().nonnegative(),
+    dueDate: z.iso.date().nullable(),
     createdAt: z.date(),
   })
   .meta({ id: 'QuestResponse' }) satisfies ZodType<Quest>;
@@ -29,6 +30,7 @@ export const QuestRequest = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().min(1).max(5000),
   difficulty: QuestDifficultyEnum.default('normal').catch('normal'),
+  dueDate: z.iso.date().nullable().optional(),
 }) satisfies ZodType<QuestInput>;
 
 export const QuestUpdateRequest = z.object({
@@ -36,6 +38,7 @@ export const QuestUpdateRequest = z.object({
   description: z.string().trim().min(1).max(5000).optional(),
   difficulty: QuestDifficultyEnum.optional(),
   status: QuestStatusEnum.optional(),
+  dueDate: z.iso.date().nullable().optional(),
 }) satisfies ZodType<QuestUpdateInput>;
 
 export const QuestParams = z.object({

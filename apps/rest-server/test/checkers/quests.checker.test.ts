@@ -22,6 +22,7 @@ export function mapQuestToCheck(quest: QuestEntity): Quest {
     status: quest.status as QuestStatus,
     difficulty,
     xpReward: calculateXpReward(difficulty),
+    dueDate: quest.dueDate,
     createdAt: quest.createdAt,
   };
 }

@@ -40,11 +40,40 @@ describe('POST /quests', () => {
       description: body.description,
       status: 'open',
       difficulty: 'normal',
+      dueDate: null,
       internalId: expect.any(Number),
       createdAt: expect.any(Date),
       updatedAt: expect.any(Date),
       deletedAt: null,
     });
+    expect(response.data.dueDate).toBeNull();
+  });
+
+  it('should create a quest with a due date', async () => {
+    const body = { title: 'Deliver the artifact', description: 'Before the festival.', dueDate: '2026-12-31' };
+    const response = await requestMaker.post({ endpoint, body });
+
+    const questDb = (await dbClient.query.questTable.findFirst({ where: { id: questId } }))!;
+    checkQuest(response.data, questDb);
+    expect(questDb.dueDate).toBe(body.dueDate);
+    expect(response.data.dueDate).toBe(body.dueDate);
+  });
+
+  it('should accept a null due date', async () => {
+    const body = { title: 'No deadline', description: 'Whenever.', dueDate: null };
+    const response = await requestMaker.post({ endpoint, body });
+
+    const questDb = (await dbClient.query.questTable.findFirst({ where: { id: questId } }))!;
+    checkQuest(response.data, questDb);
+    expect(questDb.dueDate).toBeNull();
+    expect(response.data.dueDate).toBeNull();
+  });
+
+  it('should give a validation error if the due date is invalid', async () => {
+    const body = { title: 'Bad date', description: 'desc', dueDate: '2026-13-40' } as any;
+    const response = await requestMaker.post({ endpoint, body, expectedStatus: 422 });
+
+    checkErrors(response, [{ code: 'VAL_01', message: invalidDataMessage }]);
   });
 
   const validDifficulties: Array<[QuestDifficulty, number]> = [
