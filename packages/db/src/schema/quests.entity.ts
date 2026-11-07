@@ -1,4 +1,4 @@
-import { integer, text, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { date, integer, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { pgTable } from './_table.js';
 
 export const QuestConstraints = {
@@ -12,6 +12,7 @@ export const questTable = pgTable('quest', {
   description: varchar().notNull(),
   status: varchar().notNull().default('open'),
   difficulty: varchar().notNull().default('normal'),
+  dueDate: date('due_date'),
   createdAt: timestamp({ withTimezone: true, precision: 6 }).notNull().defaultNow(),
   updatedAt: timestamp({ withTimezone: true, precision: 6 })
     .notNull()

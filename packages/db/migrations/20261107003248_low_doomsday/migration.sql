@@ -1,0 +1,1 @@
+ALTER TABLE "quest" ADD COLUMN "due_date" date;

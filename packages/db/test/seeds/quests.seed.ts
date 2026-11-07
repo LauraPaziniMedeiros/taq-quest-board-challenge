@@ -14,6 +14,7 @@ export const QuestsSeed = {
       description: `Description ${random}`,
       status: 'open',
       difficulty: 'normal',
+      dueDate: null,
       ...input,
     };
   },
