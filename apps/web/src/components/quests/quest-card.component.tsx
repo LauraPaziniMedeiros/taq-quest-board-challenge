@@ -41,6 +41,15 @@ export function QuestCard(props: QuestCardProps) {
       style={{ opacity: isDragging ? 0.5 : 1 }}>
       <h3 className={classes.title()}>{quest.title}</h3>
       <p className={classes.description()}>{quest.description}</p>
+      {quest.tags.length > 0 && (
+        <ul aria-label="Tags" className={classes.questTags()}>
+          {quest.tags.map(tag => (
+            <li key={tag.id} className={classes.questTag()}>
+              {tag.name}
+            </li>
+          ))}
+        </ul>
+      )}
       <div className={classes.tags()}>
         <span className={classes.difficulty()}>{QUEST_DIFFICULTY_LABEL[quest.difficulty]}</span>
         {quest.dueDate && <span className={classes.dueDate()}>Prazo: {formatQuestDueDate(quest.dueDate)}</span>}

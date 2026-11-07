@@ -10,10 +10,13 @@ import {
   type QuestStatus,
   type QuestUpdateInput,
 } from '@domain/model/quest.model';
+import type { Tag } from '@domain/model/tag.model';
 import { useCreateQuest } from '@domain/quests/use-create-quest.use-case';
 import { useDeleteQuest } from '@domain/quests/use-delete-quest.use-case';
 import { useListQuests } from '@domain/quests/use-list-quests.use-case';
 import { useUpdateQuest } from '@domain/quests/use-update-quest.use-case';
+import { sortTags } from '@domain/tags/tags.utils';
+import { useTags } from '@domain/tags/use-tags.use-case';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CreateQuestModal } from './create-quest-modal.component';
 import { EditQuestModal } from './edit-quest-modal.component';
@@ -42,10 +45,20 @@ const QuestBoardPage = () => {
   const { createQuest, isLoading: isCreating, error: createError } = useCreateQuest();
   const { updateQuest, isLoading: isUpdating, error: updateError } = useUpdateQuest();
   const { deleteQuest, error: deleteError } = useDeleteQuest();
+  const {
+    tags,
+    isLoading: tagsLoading,
+    error: tagsError,
+    isMutating: isTagMutating,
+    mutationError: tagMutationError,
+    createTag,
+    deleteTag,
+  } = useTags();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
   const [announcement, setAnnouncement] = useState({ id: 0, message: '' });
   const [selectedDifficulties, setSelectedDifficulties] = useState<QuestDifficulty[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [sortModes, setSortModes] = useState<
     Record<QuestStatus, 'created_desc' | 'created_asc' | 'xp_desc' | 'xp_asc'>
   >({
@@ -60,6 +73,17 @@ const QuestBoardPage = () => {
     document.documentElement.classList.toggle('dark', isDarkMode);
     window.localStorage.setItem('quest-board-theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
+
+  useEffect(() => {
+    if (tagsLoading) {
+      return;
+    }
+
+    setSelectedTagIds(previous => {
+      const validIds = previous.filter(tagId => tags.some(tag => tag.id === tagId));
+      return validIds.length === previous.length ? previous : validIds;
+    });
+  }, [tags, tagsLoading]);
 
   const announce = useCallback((message: string) => {
     setAnnouncement(previous => ({ id: previous.id + 1, message }));
@@ -94,10 +118,7 @@ const QuestBoardPage = () => {
         : selectedDifficulties.filter(item => item !== difficulty);
 
       setSelectedDifficulties(nextDifficulties);
-      const visibleCount =
-        nextDifficulties.length === 0
-          ? quests.length
-          : quests.filter(quest => nextDifficulties.includes(quest.difficulty)).length;
+      const visibleCount = quests.filter(quest => matchesBoardFilters(quest, nextDifficulties, selectedTagIds)).length;
 
       announce(
         nextDifficulties.length === 0
@@ -107,7 +128,61 @@ const QuestBoardPage = () => {
               .join(', ')}. Mostrando ${visibleCount} missões.`,
       );
     },
-    [announce, quests, selectedDifficulties],
+    [announce, quests, selectedDifficulties, selectedTagIds],
+  );
+
+  const availableTags = useMemo(() => {
+    const tagsById = new Map<string, Tag>();
+    quests.forEach(quest => quest.tags.forEach(tag => tagsById.set(tag.id, tag)));
+    return sortTags([...tagsById.values()]);
+  }, [quests]);
+
+  const handleTagFilterChange = useCallback(
+    (tag: Tag, checked: boolean) => {
+      const nextTagIds = checked ? [...selectedTagIds, tag.id] : selectedTagIds.filter(tagId => tagId !== tag.id);
+      setSelectedTagIds(nextTagIds);
+
+      const visibleCount = quests.filter(quest => matchesBoardFilters(quest, selectedDifficulties, nextTagIds)).length;
+      const selectedNames = availableTags
+        .filter(item => nextTagIds.includes(item.id))
+        .map(item => item.name)
+        .join(', ');
+
+      announce(
+        nextTagIds.length === 0
+          ? `Filtro de tags removido. Mostrando ${visibleCount} missões.`
+          : `Filtro de tags aplicado: ${selectedNames}. Mostrando ${visibleCount} missões.`,
+      );
+    },
+    [announce, availableTags, quests, selectedDifficulties, selectedTagIds],
+  );
+
+  const handleClearTagFilters = useCallback(() => {
+    setSelectedTagIds([]);
+    const visibleCount = quests.filter(quest => matchesBoardFilters(quest, selectedDifficulties, [])).length;
+    announce(`Filtro de tags removido. Mostrando ${visibleCount} missões.`);
+  }, [announce, quests, selectedDifficulties]);
+
+  const handleCreateTag = useCallback(
+    async (name: string) => {
+      return createTag(name);
+    },
+    [createTag],
+  );
+
+  const handleDeleteTag = useCallback(
+    async (tag: Tag) => {
+      const deleted = await deleteTag(tag.id);
+      if (!deleted) {
+        return false;
+      }
+
+      setSelectedTagIds(previous => previous.filter(tagId => tagId !== tag.id));
+      refetch();
+      announce(`Tag "${deleted.name}" excluída de todas as missões.`);
+      return true;
+    },
+    [announce, deleteTag, refetch],
   );
 
   const handleAdvance = useCallback(
@@ -173,11 +248,8 @@ const QuestBoardPage = () => {
   );
 
   const visibleQuests = useMemo(
-    () =>
-      selectedDifficulties.length === 0
-        ? quests
-        : quests.filter(quest => selectedDifficulties.includes(quest.difficulty)),
-    [quests, selectedDifficulties],
+    () => quests.filter(quest => matchesBoardFilters(quest, selectedDifficulties, selectedTagIds)),
+    [quests, selectedDifficulties, selectedTagIds],
   );
 
   const columns = useMemo(
@@ -223,6 +295,7 @@ const QuestBoardPage = () => {
       description: quest.description,
       difficulty: quest.difficulty,
       dueDate: quest.dueDate,
+      tagIds: quest.tags.map(tag => tag.id),
     });
 
     if (created) {
@@ -312,6 +385,31 @@ const QuestBoardPage = () => {
               ))}
             </fieldset>
           </Col>
+          {availableTags.length > 0 && (
+            <Col sm={12} className="mb-md">
+              <fieldset className="flex flex-wrap items-center gap-sm">
+                <legend className="mr-sm font-secondary text-sm font-semibold">Filtrar por tags</legend>
+                {availableTags.map(tag => (
+                  <label key={tag.id} className="flex items-center gap-xs text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedTagIds.includes(tag.id)}
+                      onChange={event => handleTagFilterChange(tag, event.target.checked)}
+                    />
+                    {tag.name}
+                  </label>
+                ))}
+                {selectedTagIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearTagFilters}
+                    className="text-neutral-strong text-sm underline hover:brightness-110">
+                    Limpar tags
+                  </button>
+                )}
+              </fieldset>
+            </Col>
+          )}
           <Col sm={12}>
             <div className="grid grid-cols-3 items-start gap-[18px]">
               {columns.map(column => (
@@ -353,6 +451,13 @@ const QuestBoardPage = () => {
         onSubmit={handleCreateQuest}
         isLoading={isCreating}
         errorMessage={createError?.message}
+        tags={tags}
+        tagsLoading={tagsLoading}
+        tagsError={tagsError?.message}
+        isTagMutating={isTagMutating}
+        tagMutationError={tagMutationError?.message}
+        onCreateTag={handleCreateTag}
+        onDeleteTag={handleDeleteTag}
       />
 
       <EditQuestModal
@@ -362,9 +467,22 @@ const QuestBoardPage = () => {
         onSubmit={handleUpdateQuest}
         isLoading={isUpdating}
         errorMessage={updateError?.message}
+        tags={tags}
+        tagsLoading={tagsLoading}
+        tagsError={tagsError?.message}
+        isTagMutating={isTagMutating}
+        tagMutationError={tagMutationError?.message}
+        onCreateTag={handleCreateTag}
+        onDeleteTag={handleDeleteTag}
       />
     </Grid>
   );
 };
+
+function matchesBoardFilters(quest: Quest, difficulties: QuestDifficulty[], tagIds: string[]): boolean {
+  const matchesDifficulty = difficulties.length === 0 || difficulties.includes(quest.difficulty);
+  const matchesTags = tagIds.length === 0 || quest.tags.some(tag => tagIds.includes(tag.id));
+  return matchesDifficulty && matchesTags;
+}
 
 export default QuestBoardPage;

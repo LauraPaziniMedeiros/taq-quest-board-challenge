@@ -1,3 +1,5 @@
+import type { Tag } from './tag.model';
+
 export type QuestStatus = 'open' | 'in_progress' | 'resolved';
 export const QUEST_DIFFICULTIES = ['easy', 'normal', 'high'] as const;
 export type QuestDifficulty = (typeof QUEST_DIFFICULTIES)[number];
@@ -10,6 +12,7 @@ export interface Quest {
   difficulty: QuestDifficulty;
   xpReward: number;
   dueDate: string | null;
+  tags: Tag[];
   createdAt: string;
 }
 
@@ -18,6 +21,7 @@ export interface QuestInput {
   description: string;
   difficulty: QuestDifficulty;
   dueDate?: string | null;
+  tagIds?: string[];
 }
 
 export interface QuestUpdateInput {
@@ -26,6 +30,7 @@ export interface QuestUpdateInput {
   difficulty?: QuestDifficulty;
   status?: QuestStatus;
   dueDate?: string | null;
+  tagIds?: string[];
 }
 
 export interface PageInfo {

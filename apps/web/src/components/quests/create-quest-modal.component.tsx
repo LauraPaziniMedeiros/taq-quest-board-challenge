@@ -5,9 +5,11 @@ import { InputLabel } from '@atomic/atm.typography';
 import { Col, Grid } from '@atomic/obj.grid';
 import { Modal } from '@atomic/obj.modal';
 import { QUEST_DIFFICULTIES, type QuestDifficulty, type QuestInput } from '@domain/model/quest.model';
+import type { Tag } from '@domain/model/tag.model';
 import { type FormEvent, useRef, useState } from 'react';
 import { QuestDueDateInput } from './quest-due-date-input.component';
 import { QUEST_DIFFICULTY_LABEL, parseDueDateInput } from './quest-presentation';
+import { QuestTagsField } from './quest-tags-field.component';
 
 const TITLE_MAX_LENGTH = 200;
 const DESCRIPTION_MAX_LENGTH = 5000;
@@ -22,6 +24,13 @@ interface CreateQuestModalProps {
   onSubmit: (input: QuestInput) => Promise<boolean>;
   isLoading: boolean;
   errorMessage?: string | null;
+  tags: Tag[];
+  tagsLoading: boolean;
+  tagsError?: string | null;
+  isTagMutating: boolean;
+  tagMutationError?: string | null;
+  onCreateTag: (name: string) => Promise<Tag | null>;
+  onDeleteTag: (tag: Tag) => Promise<boolean>;
 }
 
 export function CreateQuestModal(props: CreateQuestModalProps) {
@@ -29,6 +38,7 @@ export function CreateQuestModal(props: CreateQuestModalProps) {
   const [description, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState<QuestDifficulty>('normal');
   const [dueDate, setDueDate] = useState('');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -55,7 +65,7 @@ export function CreateQuestModal(props: CreateQuestModalProps) {
       dueDateRef.current?.focus();
       return;
     }
-    if (props.isLoading) {
+    if (props.isLoading || props.isTagMutating) {
       return;
     }
 
@@ -64,12 +74,14 @@ export function CreateQuestModal(props: CreateQuestModalProps) {
       description: description.trim(),
       difficulty,
       dueDate: dueDate.trim() ? parseDueDateInput(dueDate) : null,
+      tagIds: selectedTagIds,
     });
     if (succeeded) {
       setTitle('');
       setDescription('');
       setDifficulty('normal');
       setDueDate('');
+      setSelectedTagIds([]);
       setSubmitAttempted(false);
     }
   };
@@ -150,6 +162,20 @@ export function CreateQuestModal(props: CreateQuestModalProps) {
                 {dueDateError}
               </p>
             )}
+          </Col>
+          <Col sm={12} className="mb-md">
+            <QuestTagsField
+              id="quest-tags"
+              selectedTagIds={selectedTagIds}
+              onChange={setSelectedTagIds}
+              tags={props.tags}
+              isLoading={props.tagsLoading}
+              errorMessage={props.tagsError}
+              isMutating={props.isTagMutating}
+              mutationError={props.tagMutationError}
+              onCreateTag={props.onCreateTag}
+              onDeleteTag={props.onDeleteTag}
+            />
           </Col>
           <Col sm={12}>
             <Button type="submit" variant="cta" expanded loading={props.isLoading}>

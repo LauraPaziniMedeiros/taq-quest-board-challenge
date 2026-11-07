@@ -1,3 +1,4 @@
+import { tagSchema } from '@data/tags/tag.schema';
 import { QUEST_DIFFICULTIES, type Paginated, type PageInfo, type Quest } from '@domain/model/quest.model';
 import { type ZodType, z } from 'zod';
 
@@ -12,6 +13,7 @@ export const questSchema = z.object({
   difficulty: questDifficultySchema,
   xpReward: z.number(),
   dueDate: z.iso.date().nullable(),
+  tags: z.array(tagSchema),
   createdAt: z.string(),
 }) satisfies ZodType<Quest>;
 

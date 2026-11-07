@@ -6,6 +6,9 @@ export const style = tv({
     title: 'font-primary text-neutral-strong m-0 text-lg leading-[1.2] font-semibold',
     description: 'font-primary text-tinta-2 m-0 text-[15px] italic',
     tags: 'flex flex-wrap gap-[6px]',
+    questTags: 'm-0 flex list-none flex-wrap gap-[6px] p-0',
+    questTag:
+      'border-primary-medium bg-neutral-xsoft text-neutral-strong rounded-full border px-[10px] py-[2px] text-sm',
     difficulty: 'border-background-strong bg-neutral-xsoft text-tinta-2 rounded-full border px-[10px] py-[2px] text-sm',
     dueDate: 'border-neutral-soft bg-neutral-xxsoft text-tinta-2 rounded-full border px-[10px] py-[2px] text-sm',
     overdueBadge:
