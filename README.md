@@ -10,31 +10,31 @@ Think of this challenge as your first task working at Taqtile: what you deliver 
 
 ## TODOs
 
-- [ ] Clone this repository and push it, with its full commit history, to a new **private** repository under your own GitHub account (see [Setting up your copy](#setting-up-your-copy)). Do not push commits or open pull requests against this repository — your work happens entirely in your own copy.
-- [ ] **Quest difficulty** — every quest is currently created with the `normal` difficulty. Let the user choose the difficulty (`easy`, `normal` or `high`) when creating a quest: add it to the creation form and make `POST /quests` accept it. The XP reward already follows from the difficulty.
-- [ ] **Quest editing** — quests can't be changed after they are created, and moving a quest to the next column only changes the board in the browser, so progress is lost on reload. Add a `PATCH /quests/:id` endpoint that partially updates a quest — any of its `title`, `description`, `difficulty` and `status` — and wire the frontend to it: moving a quest between columns should persist its status, and the user should be able to edit a quest's fields from the board.
-- [ ] **Player progress** — the XP bar at the top of the board never changes: it always shows "0 / 100 XP" and level 1. Make it reflect the player's progress: the total XP is the sum of the XP rewards of resolved quests, every 100 XP is a new level, and the bar shows the progress within the current level. It should update as soon as a quest is resolved, without reloading the page.
-- [ ] Fill in [`REFERENCES.md`](REFERENCES.md) and commit it together with your OpenCode session log (see [Using OpenCode](#using-opencode)).
+- [x] Clone this repository and push it, with its full commit history, to a new **private** repository under your own GitHub account (see [Setting up your copy](#setting-up-your-copy)). Do not push commits or open pull requests against this repository — your work happens entirely in your own copy.
+- [x] **Quest difficulty** — every quest is currently created with the `normal` difficulty. Let the user choose the difficulty (`easy`, `normal` or `high`) when creating a quest: add it to the creation form and make `POST /quests` accept it. The XP reward already follows from the difficulty.
+- [x] **Quest editing** — quests can't be changed after they are created, and moving a quest to the next column only changes the board in the browser, so progress is lost on reload. Add a `PATCH /quests/:id` endpoint that partially updates a quest — any of its `title`, `description`, `difficulty` and `status` — and wire the frontend to it: moving a quest between columns should persist its status, and the user should be able to edit a quest's fields from the board.
+- [x] **Player progress** — the XP bar at the top of the board never changes: it always shows "0 / 100 XP" and level 1. Make it reflect the player's progress: the total XP is the sum of the XP rewards of resolved quests, every 100 XP is a new level, and the bar shows the progress within the current level. It should update as soon as a quest is resolved, without reloading the page.
+- [x] Fill in [`REFERENCES.md`](REFERENCES.md) and commit it together with your OpenCode session log (see [Using OpenCode](#using-opencode)).
 
 ## Bonus (optional)
 
 Only after the TODOs are done. Pick any of these, in any order: one bonus done well counts more than several half-done, and none of them makes up for an unfinished TODO. Mention in your commits which ones you did.
 
-- [ ] **Remove a quest** — add a `DELETE /quests/:id` endpoint and a remove action on the card, with a confirmation step. The database already has a `deletedAt` column: use it so the quest is hidden, not erased.
+- [x] **Remove a quest** — add a `DELETE /quests/:id` endpoint and a remove action on the card, with a confirmation step. The database already has a `deletedAt` column: use it so the quest is hidden, not erased.
 - [ ] **Search** — add a search field to the board that filters quests by title, backed by a `search` query parameter on `GET /quests`.
-- [ ] **Due date** — let the user set an optional due date when creating or editing a quest, and highlight quests that are past due. This needs a new column and a database migration.
-- [ ] **Drag and drop** — let the user move quests between columns by dragging the card, saving the new status through `PATCH /quests/:id`.
-- [ ] **Optimistic update** — when a quest moves to another column, update the board right away instead of waiting for the server, and move it back with an error message if the request fails.
-- [ ] **Level up** — give each level a title (for example Recruit, Adventurer, Hero) shown next to the player's name instead of the fixed "Recruta", and celebrate with a message or animation when the player reaches a new level.
-- [ ] **Filter by difficulty** — let the user show only quests of one or more difficulties (easy, normal, high) on the board.
-- [ ] **Sort by XP** — let the user sort the quests inside each column by XP reward, highest or lowest first.
-- [ ] **Duplicate a quest** — add an action on the card that creates a copy of the quest, ready to be edited.
-- [ ] **Tags** — let the user add free-form tags to a quest and filter the board by them. This needs a new table, its relation to quests and a database migration.
-- [ ] **Accessibility** — make it possible to use the board with the keyboard only, including moving quests between columns, with a visible focus and screen readers announcing the changes.
+- [x] **Due date** — let the user set an optional due date when creating or editing a quest, and highlight quests that are past due. This needs a new column and a database migration.
+- [x] **Drag and drop** — let the user move quests between columns by dragging the card, saving the new status through `PATCH /quests/:id`.
+- [x] **Optimistic update** — when a quest moves to another column, update the board right away instead of waiting for the server, and move it back with an error message if the request fails.
+- [x] **Level up** — give each level a title (for example Recruit, Adventurer, Hero) shown next to the player's name instead of the fixed "Recruta", and celebrate with a message or animation when the player reaches a new level.
+- [x] **Filter by difficulty** — let the user show only quests of one or more difficulties (easy, normal, high) on the board.
+- [x] **Sort by XP** — let the user sort the quests inside each column by XP reward, highest or lowest first.
+- [x] **Duplicate a quest** — add an action on the card that creates a copy of the quest, ready to be edited.
+- [x] **Tags** — let the user add free-form tags to a quest and filter the board by them. This needs a new table, its relation to quests and a database migration.
+- [x] **Accessibility** — make it possible to use the board with the keyboard only, including moving quests between columns, with a visible focus and screen readers announcing the changes.
 - [ ] **Error and loading states** — handle what happens off the happy path: a React error boundary so a crash doesn't blank the page, and clear loading and empty states on the board.
-- [ ] **Dark mode** — add a toggle that switches the board between light and dark themes. The design system already has dark mode tokens to build on.
+- [x] **Dark mode** — add a toggle that switches the board between light and dark themes. The design system already has dark mode tokens to build on.
 - [ ] **End-to-end test** — write a browser test (for example with Playwright) covering the main flow: create a quest, move it to the last column and see the XP bar go up.
-- [ ] **Continuous integration** — add a GitHub Actions workflow that runs lint, typecheck and tests on every push to your repository.
+- [x] **Continuous integration** — add a GitHub Actions workflow that runs lint, typecheck and tests on every push to your repository.
 
 ## Prerequisites
 
